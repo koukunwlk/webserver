@@ -47,6 +47,9 @@ $(TEST_D)/%.o : $(SRC_D)/%.cpp $(SRC_D)/%.cpp
 
 all: $(NAME)
 
+deps: 
+	@chmod +x install_deps.sh
+	@./install_deps.sh
 clean:
 	@echo -n "Cleaning... "
 	@$(RM) $(OBJ)
