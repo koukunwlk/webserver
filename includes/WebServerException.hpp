@@ -23,7 +23,7 @@ class ParsingException : public WebServerException {
 
 class ConfigException : public WebServerException {
  public:
-  class FileNotFound : public std::exception {
+  class FileNotFound : public WebServerException {
    private:
     std::string message;
 

@@ -44,7 +44,7 @@ TEST(ExceptionTest, ConfigExceptionFileNotFound_Expect_Throw) {
           throw;
         }
       },
-      ConfigException::FileNotFound);
+      WebServerException);
 }
 
 TEST(ExceptionTest, ConfigExceptionFileNotFound_Expect_No_Throw) {
