@@ -1,4 +1,4 @@
-#include "WebServerException.hpp"
+#include "WebServerException/WebServerException.hpp"
 
 #include <gtest/gtest.h>
 
