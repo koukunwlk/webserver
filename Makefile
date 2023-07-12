@@ -4,24 +4,24 @@ TFLAGS = -l gtest -l pthread
 
 NAME 		= webserver
 
-INC 		=	includes
+INC 		=	include
 OBJ_D		=	obj
 
 SRC_D		=	src
-INC_D		=	includes
+INC_D		=	include
 
 RAW_H		=	webserver.hpp
 
 RAW_C		=	main.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
-INCLUDES	=	$(addprefix $(INC_D)/,$(RAW_H))
+INCLUDE	=	$(addprefix $(INC_D)/,$(RAW_H))
 
 TEST_D		=	tests
 TEST_OBJ	=	$(addprefix $(TEST_D)/,$(TEST_C:.cpp=.o))
 
 
-$(NAME): $(OBJ) $(INCLUDES)
+$(NAME): $(OBJ) $(INCLUDE)
 	@echo -n "Compiling $(NAME)... "
 	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 	@echo Done!
@@ -60,7 +60,7 @@ test_all:
 		echo "Done!"; \
     done
 
-test:$(INCLUDES)
+test:$(INCLUDE)
 	@$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS)  -I $(INC_D) -o $(TEST_D)/${FILENAME}.test
 
 all: $(NAME)
