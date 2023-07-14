@@ -1,6 +1,6 @@
 #include "WebServerException/WebServerException.hpp"
 
-#include <gtest/gtest.h>
+#include "gtest.h"
 
 TEST(ExceptionTest, WebServerExceptionMessage_Expect_Throw) {
   EXPECT_THROW(

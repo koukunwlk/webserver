@@ -1,10 +1,11 @@
 CC	=	c++
 CFLAGS = -Wall -Wextra -Werror
-TFLAGS = -l gtest -l pthread
+TFLAGS = -Llib/test/libgtest.so.1.13.0 -l gtest
 
 NAME 		= webserver
 
 INC 		=	include
+INC_TEST_D	=	lib/test/include/gtest
 OBJ_D		=	obj
 
 SRC_D		=	src
@@ -61,7 +62,7 @@ test_all:
     done
 
 test:$(INCLUDE)
-	@$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS)  -I $(INC_D) -o $(TEST_D)/${FILENAME}.test
+	$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS) -I $(INC_D) -I $(INC_TEST_D) -o $(TEST_D)/${FILENAME}
 
 all: $(NAME)
 
