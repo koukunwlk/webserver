@@ -1,6 +1,6 @@
 CC	=	c++
 CFLAGS = -Wall -Wextra -Werror
-TFLAGS = -l gtest -l pthread
+TFLAGS = -l gtest
 
 NAME 		= webserver
 
@@ -51,17 +51,25 @@ test_file:
 
 test_all:
 	@echo "Running all tests"; \
-    files=$$(find . -name "*.spec.cpp" -type f); \
+    files=$$(find src -name "*.spec.cpp" -type f); \
+	echo $$files; \
+	status=0; \
     for filepath in $$files; do \
         filename=$$(basename "$$filepath" .spec.cpp); \
-        make test FILE_PATH="$$filepath" FILENAME="$$filename"; \
-		echo "Running test for $$filepath"; \
-        ./${TEST_D}/$$filename; \
+        make test_folder FOLDER=$$filename; \
+		status=$$(expr $$status + $$?); \
 		echo "Done!"; \
-    done
+    done;\
+	exit $$status
+
+test_folder:
+	@echo "Running all tests in folder ${FOLDER}"; \
+	files=$$(find src/${FOLDER} -iname "*.cpp"  | tr '\n' ' '); \
+	make test FILE_PATH="$$files" FILENAME=${FOLDER}; \
+	./${TEST_D}/${FOLDER};
 
 test:$(INCLUDE)
-	@$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS)  -I $(INC_D) -o $(TEST_D)/${FILENAME}.test
+	@$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS) -I $(INC_D) -o $(TEST_D)/${FILENAME}
 
 all: $(NAME)
 
