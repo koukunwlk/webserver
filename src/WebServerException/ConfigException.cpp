@@ -1,7 +1,7 @@
 #include "WebServerException/ConfigException.hpp"
 
 ConfigException::ConfigException() {
-  this->message = "A config exception o cured";
+  this->message = "A config exception ocured";
 }
 
 const char *ConfigException::what() const throw() {
