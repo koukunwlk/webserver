@@ -33,4 +33,9 @@
 *.exe
 *.out
 *.app
+
+.vscode/*
+
 webserver
+
+.gitignore
