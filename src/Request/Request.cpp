@@ -1,13 +1,14 @@
 #include "Request/Request.hpp"
 
 Request::Request(const char* data) : rawData(data) {
-  std::size_t delim = this->rawData.find("\r\n\r\n");
+  std::size_t delim = this->rawData.find(CRLF);
 
   this->header.rawData = this->rawData.substr(0, delim);
 
   this->header = getHeader(this->header.rawData);
 
-  this->body = this->rawData.substr(delim + 2);
+  this->body = this->rawData.substr(delim + 4);
+  validateBodyLength((size_t)header.contentLength, this->body.size());
 }
 
 Request::~Request() {}
@@ -30,6 +31,12 @@ header_t getHeader(std::string rawData) {
   return header;
 }
 
+void validateBodyLength(size_t contentLength, size_t bodySize) {
+  if (contentLength != bodySize) {
+    throw RequestValidationException();
+  }
+}
+
 void validateHeader(header_t& header) {
   std::string acceptedMethods[] = {"GET", "POST", "DELETE"};
   bool validatedMethod = FALSE;
@@ -41,6 +48,10 @@ void validateHeader(header_t& header) {
     }
   }
   if (!validatedMethod) {
+    throw RequestValidationException::InvalidMethod(header.method.c_str());
+  }
+
+  if (header.contentLength < 0) {
     throw RequestValidationException();
   }
 }
@@ -60,7 +71,7 @@ void getRequestLine(header_t& header, std::string line) {
 void getGeneralHeader(header_t& header, std::string line) {
   std::string props[] = {"Host", "Content-Type", "Content-Length"};
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     if (line.find(props[i]) == std::string::npos) {
       continue;
     }
