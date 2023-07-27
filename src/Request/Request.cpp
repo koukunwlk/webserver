@@ -37,7 +37,7 @@ void Request::parseRequestData() {
 void Request::parseRawHeader() {
   std::size_t delim = _rawData.find(CRLF);
   if (delim == std::string::npos) {
-    throw RequestValidationException();
+    throw RequestValidationException::InvalidFormat();
   }
 
   _header.rawData = _rawData.substr(0, delim);
@@ -97,7 +97,7 @@ void Request::parseGeneralHeader(std::string line) {
 std::string Request::getPropertyValueFrom(std::string line) {
   size_t colon = line.find(":");
   if (colon == std::string::npos) {
-    throw RequestValidationException();
+    throw RequestValidationException::InvalidFormat();
   }
   std::string propertyValue = line.substr(colon + 1);
 

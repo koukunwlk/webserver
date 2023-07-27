@@ -50,11 +50,32 @@ TEST(RequestClass, HeaderParseWithoutCRLF) {
         try {
           Request req(bufferMock);
         } catch (std::exception &e) {
-          EXPECT_STREQ("A Request Validation exception occured", e.what());
+          EXPECT_STREQ("A Request Validation exception occured: Invalid Format",
+                       e.what());
           throw;
         }
       },
-      RequestValidationException);
+      RequestValidationException::InvalidFormat);
+}
+
+TEST(RequestClass, HeaderParseWithoutColon) {
+  const char bufferMock[] =
+      "GET /teste.php HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type text/plain\n"
+      "Content-Length: 0" CRLF;
+
+  EXPECT_THROW(
+      {
+        try {
+          Request req(bufferMock);
+        } catch (std::exception &e) {
+          EXPECT_STREQ("A Request Validation exception occured: Invalid Format",
+                       e.what());
+          throw;
+        }
+      },
+      RequestValidationException::InvalidFormat);
 }
 
 TEST(RequestClass, HeaderValidateMethodException) {
@@ -69,7 +90,9 @@ TEST(RequestClass, HeaderValidateMethodException) {
         try {
           Request req(bufferMock);
         } catch (std::exception &e) {
-          EXPECT_STREQ("Invalid Method: PATCH", e.what());
+          EXPECT_STREQ(
+              "A Request Validation exception occured: Invalid Method: PATCH",
+              e.what());
           throw;
         }
       },
@@ -108,7 +131,7 @@ TEST(RequestClass, BodyParse) {
   EXPECT_EQ(req.getBody(), "SampleBody");
 }
 
-TEST(RequestClass, BodyContentLengthException) {
+TEST(RequestClass, BodyWrongContentLengthException) {
   const char bufferMock[] =
       "POST /teste.php HTTP/1.1\r\n"
       "Host: localhost:3000\n"
