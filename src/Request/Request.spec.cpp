@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(RequestClass, HeaderParse) {
+TEST(RequestClass, HeaderParseWithSpaces) {
   const char bufferMock[] =
       "GET /teste.php HTTP/1.1\r\n"
       "Host: localhost:3000\n"
@@ -11,13 +11,50 @@ TEST(RequestClass, HeaderParse) {
 
   Request req(bufferMock);
 
-  EXPECT_EQ(req.rawData, bufferMock);
-  EXPECT_EQ(req.header.method, "GET");
-  EXPECT_EQ(req.header.target, "/teste.php");
-  EXPECT_EQ(req.header.protocol, "HTTP/1.1");
-  EXPECT_EQ(req.header.host, "localhost:3000");
-  EXPECT_EQ(req.header.contentType, "text/plain");
-  EXPECT_EQ(req.header.contentLength, 0);
+  EXPECT_EQ(req.getRawData(), bufferMock);
+  EXPECT_EQ(req.getHeaderMethod(), "GET");
+  EXPECT_EQ(req.getHeaderTarget(), "/teste.php");
+  EXPECT_EQ(req.getHeaderProtocol(), "HTTP/1.1");
+  EXPECT_EQ(req.getHeaderHost(), "localhost:3000");
+  EXPECT_EQ(req.getHeaderContentType(), "text/plain");
+  EXPECT_EQ(req.getHeaderContentLength(), 0);
+}
+
+TEST(RequestClass, HeaderParseWithoutSpaces) {
+  const char bufferMock[] =
+      "GET /teste.php HTTP/1.1\r\n"
+      "Host:localhost:3000\n"
+      "Content-Type:text/plain\n"
+      "Content-Length:0" CRLF;
+
+  Request req(bufferMock);
+
+  EXPECT_EQ(req.getRawData(), bufferMock);
+  EXPECT_EQ(req.getHeaderMethod(), "GET");
+  EXPECT_EQ(req.getHeaderTarget(), "/teste.php");
+  EXPECT_EQ(req.getHeaderProtocol(), "HTTP/1.1");
+  EXPECT_EQ(req.getHeaderHost(), "localhost:3000");
+  EXPECT_EQ(req.getHeaderContentType(), "text/plain");
+  EXPECT_EQ(req.getHeaderContentLength(), 0);
+}
+
+TEST(RequestClass, HeaderParseWithoutCRLF) {
+  const char bufferMock[] =
+      "GET /teste.php HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type: text/plain\n"
+      "Content-Length: 0";
+
+  EXPECT_THROW(
+      {
+        try {
+          Request req(bufferMock);
+        } catch (std::exception &e) {
+          EXPECT_STREQ("A Request Validation exception occured", e.what());
+          throw;
+        }
+      },
+      RequestValidationException);
 }
 
 TEST(RequestClass, HeaderValidateMethodException) {
@@ -25,7 +62,7 @@ TEST(RequestClass, HeaderValidateMethodException) {
       "PATCH / HTTP/1.1\r\n"
       "Host: localhost:3000\n"
       "Content-Type: text/plain\n"
-      "Content-Length: 0\r\n\r\n";
+      "Content-Length: 0" CRLF;
 
   EXPECT_THROW(
       {
@@ -44,7 +81,7 @@ TEST(RequestClass, HeaderValidateContentLengthException) {
       "GET / HTTP/1.1\r\n"
       "Host: localhost:3000\n"
       "Content-Type: text/plain\n"
-      "Content-Length: -1\r\n\r\n";
+      "Content-Length: -1" CRLF;
 
   EXPECT_THROW(
       {
@@ -68,7 +105,7 @@ TEST(RequestClass, BodyParse) {
 
   Request req(bufferMock);
 
-  EXPECT_EQ(req.body, "SampleBody");
+  EXPECT_EQ(req.getBody(), "SampleBody");
 }
 
 TEST(RequestClass, BodyContentLengthException) {
