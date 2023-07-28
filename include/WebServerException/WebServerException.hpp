@@ -15,3 +15,4 @@ class WebServerException : public std::exception {
 #include "WebServerException/ConfigException.hpp"
 #include "WebServerException/HostingException.hpp"
 #include "WebServerException/ParsingException.hpp"
+#include "WebServerException/RequestValidationException.hpp"
