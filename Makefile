@@ -65,7 +65,8 @@ test_all:
 test_folder:
 	@echo "Running all tests in folder ${FOLDER}"; \
 	files=$$(find src/${FOLDER} -iname "*.cpp"  | tr '\n' ' '); \
-	make test FILE_PATH="$$files" FILENAME=${FOLDER}; \
+	exception=$$(find src/WebServerException -iname "*.cpp" | tr '\n' ' '); \
+	make test FILE_PATH="$$files $$exception" FILENAME=${FOLDER}; \
 	./${TEST_D}/${FOLDER};
 
 test:$(INCLUDE)
