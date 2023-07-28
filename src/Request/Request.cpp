@@ -118,11 +118,11 @@ void Request::validate() {
 
 void Request::validateMethod() {
   std::string acceptedMethods[] = {"GET", "POST", "DELETE"};
-  bool validatedMethod = FALSE;
+  bool validatedMethod = false;
 
   for (int i = 0; i < 3; i++) {
     if (_header.method.find(acceptedMethods[i]) != std::string::npos) {
-      validatedMethod = TRUE;
+      validatedMethod = true;
       break;
     }
   }

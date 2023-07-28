@@ -7,9 +7,6 @@
 
 #include "WebServerException/WebServerException.hpp"
 
-#define TRUE 1
-#define FALSE 0
-
 #define CRLF "\r\n\r\n"
 
 typedef struct Header {
