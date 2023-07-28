@@ -4,6 +4,8 @@ TFLAGS = -l gtest
 
 NAME 		= webserver
 
+RM			=	rm -rf
+
 INC 		=	include
 OBJ_D		=	obj
 
@@ -70,6 +72,7 @@ test_folder:
 	./${TEST_D}/${FOLDER};
 
 test:$(INCLUDE)
+	@mkdir -p $(TEST_D)
 	@$(CC) $(CFLAGS) $(FILE_PATH) $(TFLAGS) -I $(INC_D) -o $(TEST_D)/${FILENAME}
 
 all: $(NAME)
@@ -77,7 +80,7 @@ all: $(NAME)
 clean:
 	@echo -n "Cleaning... "
 	@$(RM) $(OBJ)
-	@$(RM) $(TEST_OBJ)
+	@$(RM) $(TEST_D)/*
 	@echo Done!
 
 fclean:	clean
