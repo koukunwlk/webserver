@@ -1,8 +1,14 @@
-#ifndef RESPONSE_HPP
-# define RESPONSE_HPP
+#pragma once
 
 # include <iostream>
 # include <string>
+
+struct Header {
+	// Status-Line
+	std::string	protocol;
+	int			statusCode;
+	std::string	reasonPhrase;
+};
 
 class Response
 {
@@ -17,8 +23,14 @@ class Response
 		// Operators
 		Response & operator=(const Response &assign);
 
+		// Methods
+		void setStatusCode(int statusCode);
+
+		// Accessors
+		int getStatusCode() const;
+
 	private:
+		Header		_header;
 
 };
 
-#endif

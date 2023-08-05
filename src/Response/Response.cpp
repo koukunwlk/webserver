@@ -1,29 +1,42 @@
-#include "Response.hpp"
+#include "Response/Response.hpp"
 
-// Constructors
-Response::Response()
-{
-	std::cout << "\e[0;33mDefault Constructor called of Response\e[0m" << std::endl;
-}
+/*
+** ------------------------------- CONSTRUCTOR --------------------------------
+*/
+
+Response::Response() { }
 
 Response::Response(const Response &copy)
 {
-	(void) copy;
-	std::cout << "\e[0;33mCopy Constructor called of Response\e[0m" << std::endl;
+	if (this != &copy)
+		*this = copy;
 }
 
+/*
+** -------------------------------- DESTRUCTOR --------------------------------
+*/
 
-// Destructor
-Response::~Response()
-{
-	std::cout << "\e[0;31mDestructor called of Response\e[0m" << std::endl;
-}
+Response::~Response() { }
 
+/*
+** --------------------------------- OVERLOAD ---------------------------------
+*/
 
-// Operators
 Response & Response::operator=(const Response &assign)
 {
-	(void) assign;
+	if (this != &assign)
+		_header = assign._header;
 	return *this;
 }
 
+/*
+** --------------------------------- METHODS ----------------------------------
+*/
+
+void Response::setStatusCode(int statusCode) { _header.statusCode = statusCode; }
+
+/*
+** --------------------------------- ACCESSOR ---------------------------------
+*/
+
+int Response::getStatusCode() const { return _header.statusCode ; }
