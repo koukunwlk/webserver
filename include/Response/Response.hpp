@@ -15,8 +15,9 @@ struct Header {
 
   // Response-Header Fields
   std::string acceptRanges;
-  
-
+  std::string location;
+  std::string server;
+  std::string wwwAuthenticate;
 };
 
 class Response {
@@ -37,6 +38,10 @@ class Response {
   void setReasonPhrase(std::string reasonPhrase);
   void setDate(std::string date);
   void setTransferEncoding(std::string transferEncoding);
+  void setAcceptRanges(std::string acceptRanges);
+  void setLocation(std::string location);
+  void setServer(std::string server);
+  void setWwwAuthenticate(std::string wwwAuthenticate);
 
   // Accessors
   int getStatusCode() const;
@@ -44,6 +49,10 @@ class Response {
   std::string getReasonPhrase() const;
   std::string getDate() const;
   std::string getTransferEncoding() const;
+  std::string getAcceptRanges() const;
+  std::string getLocation() const;
+  std::string getServer() const;
+  std::string getWwwAuthenticate() const;
 
  private:
   Header _header;

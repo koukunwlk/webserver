@@ -1,6 +1,7 @@
 #include "Response/Response.hpp"
 #include "gtest/gtest.h"
 
+// Status Code Tests
 TEST(ResponseClass, StatusCodeTest) {
   Response res;
 
@@ -107,6 +108,7 @@ TEST(ResponseClass, checkReasonPhraseTest) {
   EXPECT_EQ(res.getReasonPhrase(), "Accepted");
 }
 
+// GENERAL HEADER FIELDS TEST
 TEST(ResponseClass, checkDateTest) {
   Response res;
 
@@ -129,6 +131,35 @@ TEST(ResponseClass, checkTransferEncodingTest) {
 
   res.setTransferEncoding("gzip");
   EXPECT_EQ(res.getTransferEncoding(), "gzip");
+}
+
+// RESPONSE HEADER FIELDS TEST
+TEST(ResponseClass, checkAcceptRangesTest) {
+  Response res;
+
+  res.setAcceptRanges("none");
+  EXPECT_EQ(res.getAcceptRanges(), "none");
+}
+
+TEST(ResponseClass, checkLocationTest) {
+  Response res;
+
+  res.setLocation("http://www.w3.org/pub/WWW/People.html");
+  EXPECT_EQ(res.getLocation(), "http://www.w3.org/pub/WWW/People.html");
+}
+
+TEST(ResponseClass, checkServerTest) {
+  Response res;
+
+  res.setServer("Apache/2.4.1 (Unix)");
+  EXPECT_EQ(res.getServer(), "Apache/2.4.1 (Unix)");
+}
+
+TEST(ResponseClass, checkWwwAuthenticateTest) {
+  Response res;
+
+  res.setWwwAuthenticate("Basic");
+  EXPECT_EQ(res.getWwwAuthenticate(), "Basic");
 }
 
 int main(int argc, char **argv) {

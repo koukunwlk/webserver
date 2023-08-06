@@ -47,6 +47,20 @@ void Response::setTransferEncoding(std::string transferEncoding) {
   _header.transferEncoding = transferEncoding;
 }
 
+void Response::setAcceptRanges(std::string acceptRanges) {
+  _header.acceptRanges = acceptRanges;
+}
+
+void Response::setLocation(std::string location) {
+  _header.location = location;
+}
+
+void Response::setServer(std::string server) { _header.server = server; }
+
+void Response::setWwwAuthenticate(std::string wwwAuthenticate) {
+  _header.wwwAuthenticate = wwwAuthenticate;
+}
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
@@ -63,4 +77,14 @@ std::string Response::getDate() const { return _header.date; }
 
 std::string Response::getTransferEncoding() const {
   return _header.transferEncoding;
+}
+
+std::string Response::getAcceptRanges() const { return _header.acceptRanges; }
+
+std::string Response::getLocation() const { return _header.location; }
+
+std::string Response::getServer() const { return _header.server; }
+
+std::string Response::getWwwAuthenticate() const {
+  return _header.wwwAuthenticate;
 }
