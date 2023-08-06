@@ -41,6 +41,12 @@ void Response::setReasonPhrase(std::string reasonPhrase) {
   _header.reasonPhrase = reasonPhrase;
 }
 
+void Response::setDate(std::string date) { _header.date = date; }
+
+void Response::setTransferEncoding(std::string transferEncoding) {
+  _header.transferEncoding = transferEncoding;
+}
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
@@ -52,3 +58,9 @@ std::string Response::getProtocolVersion() const {
 }
 
 std::string Response::getReasonPhrase() const { return _header.reasonPhrase; }
+
+std::string Response::getDate() const { return _header.date; }
+
+std::string Response::getTransferEncoding() const {
+  return _header.transferEncoding;
+}

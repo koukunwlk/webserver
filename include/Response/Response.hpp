@@ -4,12 +4,19 @@
 #include <string>
 
 struct Header {
-  std::string protocolVersion;  //
   // Start-Line (status)
+  std::string protocolVersion;
   int statusCode;
   std::string reasonPhrase;
 
-  // Header Fields
+  // General-Header Fields
+  std::string date;
+  std::string transferEncoding;
+
+  // Response-Header Fields
+  std::string acceptRanges;
+  
+
 };
 
 class Response {
@@ -28,11 +35,15 @@ class Response {
   void setStatusCode(int statusCode);
   void setProtocolVersion(std::string protocol);
   void setReasonPhrase(std::string reasonPhrase);
+  void setDate(std::string date);
+  void setTransferEncoding(std::string transferEncoding);
 
   // Accessors
   int getStatusCode() const;
   std::string getProtocolVersion() const;
   std::string getReasonPhrase() const;
+  std::string getDate() const;
+  std::string getTransferEncoding() const;
 
  private:
   Header _header;

@@ -107,6 +107,30 @@ TEST(ResponseClass, checkReasonPhraseTest) {
   EXPECT_EQ(res.getReasonPhrase(), "Accepted");
 }
 
+TEST(ResponseClass, checkDateTest) {
+  Response res;
+
+  // [format] Date = "Date" ":" HTTP-date
+  res.setDate("Tue, 15 Nov 1994 08:12:31 GMT");
+  EXPECT_EQ(res.getDate(), "Tue, 15 Nov 1994 08:12:31 GMT");
+}
+
+TEST(ResponseClass, checkTransferEncodingTest) {
+  Response res;
+
+  res.setTransferEncoding("chunked");
+  EXPECT_EQ(res.getTransferEncoding(), "chunked");
+
+  res.setTransferEncoding("compress");
+  EXPECT_EQ(res.getTransferEncoding(), "compress");
+
+  res.setTransferEncoding("deflate");
+  EXPECT_EQ(res.getTransferEncoding(), "deflate");
+
+  res.setTransferEncoding("gzip");
+  EXPECT_EQ(res.getTransferEncoding(), "gzip");
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

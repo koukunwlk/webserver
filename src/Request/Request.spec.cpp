@@ -1,6 +1,6 @@
-#include "Request/Request.hpp"
-
 #include <gtest/gtest.h>
+
+#include "Request/Request.hpp"
 
 TEST(RequestClass, HeaderParseWithSpaces) {
   const char bufferMock[] =
