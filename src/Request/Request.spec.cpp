@@ -58,6 +58,26 @@ TEST(RequestClass, HeaderParseWithoutCRLF) {
       RequestValidationException::InvalidFormat);
 }
 
+TEST(RequestClass, HeaderParseWithoutCR) {
+  const char bufferMock[] =
+      "GET /teste.php HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type: text/plain\n"
+      "Content-Length: 0\n";
+
+  EXPECT_THROW(
+      {
+        try {
+          Request req(bufferMock);
+        } catch (std::exception &e) {
+          EXPECT_STREQ("A Request Validation exception occured: Invalid Format",
+                       e.what());
+          throw;
+        }
+      },
+      RequestValidationException::InvalidFormat);
+}
+
 TEST(RequestClass, HeaderParseWithoutColon) {
   const char bufferMock[] =
       "GET /teste.php HTTP/1.1\r\n"
