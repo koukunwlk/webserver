@@ -16,12 +16,6 @@ Response::Response(int statusCode, std::string contentType,
   _body = body;
 }
 
-Response::Response(const Response &copy) {
-  if (this != &copy) {
-    *this = copy;
-  }
-}
-
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -37,6 +31,16 @@ Response &Response::operator=(const Response &assign) {
     _header = assign._header;
   }
   return *this;
+}
+
+std::ostream &operator<<(std::ostream &os, const Response &res) {
+  os << res.getProtocolVersion() << " " << res.getStatusCode() << " "
+     << res.getReasonPhrase() << "\r\n"
+     << "Content-Type: " << res.getContentType() << "\r\n"
+     << "Content-Length: " << res.getContentLength() << "\r\n"
+     << "\r\n"
+     << res.getBody();
+  return os;
 }
 
 /*

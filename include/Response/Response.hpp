@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <ostream>
 #include <string>
 
 struct Header {
@@ -26,6 +27,7 @@ class Response {
 
   // Operators
   Response &operator=(const Response &assign);
+  friend std::ostream &operator<<(std::ostream &os, const Response &res);
 
   // Methods
   void setProtocolVersion(std::string protocol);

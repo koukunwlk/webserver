@@ -58,6 +58,14 @@ TEST(ResponseClass, checkConstructorTest) {
   EXPECT_EQ(res.getBody(), "Hello World!");
 }
 
+TEST(ResponseClass, checkOstreamOperatorOverloadTest) {
+  Response res(200, "text/html; charset=utf-8", "Hello World!");
+
+  std::cout << "---- OSTREAM Operator Overload TEST ----" << std::endl;
+  std::cout << res << std::endl;
+  std::cout << "---- ----" << std::endl;
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
