@@ -9,21 +9,16 @@ struct Header {
   int statusCode;
   std::string reasonPhrase;
 
-  // General-Header Fields
-  std::string date;
-  std::string transferEncoding;
-
-  // Response-Header Fields
-  std::string acceptRanges;
-  std::string location;
-  std::string server;
-  std::string wwwAuthenticate;
+  // Entity-Header Fields
+  int contentLenght;
+  std::string contentType;
 };
 
 class Response {
  public:
   // Constructors
   Response();
+  Response(int statusCode, std::string contentType, const std::string &body);
   Response(const Response &copy);
 
   // Destructor
@@ -33,27 +28,23 @@ class Response {
   Response &operator=(const Response &assign);
 
   // Methods
-  void setStatusCode(int statusCode);
   void setProtocolVersion(std::string protocol);
+  void setStatusCode(int statusCode);
+  void setReasonPhrase(int setReasonPhrase);
   void setReasonPhrase(std::string reasonPhrase);
-  void setDate(std::string date);
-  void setTransferEncoding(std::string transferEncoding);
-  void setAcceptRanges(std::string acceptRanges);
-  void setLocation(std::string location);
-  void setServer(std::string server);
-  void setWwwAuthenticate(std::string wwwAuthenticate);
+  void setContentLength(int contentLenght);
+  void setContentType(std::string contentType);
+  void setBody(std::string body);
 
   // Accessors
-  int getStatusCode() const;
   std::string getProtocolVersion() const;
+  int getStatusCode() const;
   std::string getReasonPhrase() const;
-  std::string getDate() const;
-  std::string getTransferEncoding() const;
-  std::string getAcceptRanges() const;
-  std::string getLocation() const;
-  std::string getServer() const;
-  std::string getWwwAuthenticate() const;
+  int getContentLength() const;
+  std::string getContentType() const;
+  std::string getBody() const;
 
  private:
   Header _header;
+  std::string _body;
 };

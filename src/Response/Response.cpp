@@ -6,8 +6,20 @@
 
 Response::Response() {}
 
+Response::Response(int statusCode, std::string contentType,
+                   const std::string &body) {
+  _header.protocolVersion = "HTTP/1.1";
+  _header.statusCode = statusCode;
+  setReasonPhrase(statusCode);
+  _header.contentType = contentType;
+  _header.contentLenght = body.length();
+  _body = body;
+}
+
 Response::Response(const Response &copy) {
-  if (this != &copy) *this = copy;
+  if (this != &copy) {
+    *this = copy;
+  }
 }
 
 /*
@@ -21,7 +33,9 @@ Response::~Response() {}
 */
 
 Response &Response::operator=(const Response &assign) {
-  if (this != &assign) _header = assign._header;
+  if (this != &assign) {
+    _header = assign._header;
+  }
   return *this;
 }
 
@@ -41,25 +55,21 @@ void Response::setReasonPhrase(std::string reasonPhrase) {
   _header.reasonPhrase = reasonPhrase;
 }
 
-void Response::setDate(std::string date) { _header.date = date; }
-
-void Response::setTransferEncoding(std::string transferEncoding) {
-  _header.transferEncoding = transferEncoding;
+void Response::setReasonPhrase(int statusCode) {
+  if (statusCode == 200) _header.reasonPhrase = "OK";
+  if (statusCode == 404) _header.reasonPhrase = "Not Found";
+  if (statusCode == 500) _header.reasonPhrase = "Internal Server Error";
 }
 
-void Response::setAcceptRanges(std::string acceptRanges) {
-  _header.acceptRanges = acceptRanges;
+void Response::setContentType(std::string contentType) {
+  _header.contentType = contentType;
 }
 
-void Response::setLocation(std::string location) {
-  _header.location = location;
+void Response::setContentLength(int contentLenght) {
+  _header.contentLenght = contentLenght;
 }
 
-void Response::setServer(std::string server) { _header.server = server; }
-
-void Response::setWwwAuthenticate(std::string wwwAuthenticate) {
-  _header.wwwAuthenticate = wwwAuthenticate;
-}
+void Response::setBody(std::string body) { _body = body; }
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -73,18 +83,8 @@ std::string Response::getProtocolVersion() const {
 
 std::string Response::getReasonPhrase() const { return _header.reasonPhrase; }
 
-std::string Response::getDate() const { return _header.date; }
+std::string Response::getContentType() const { return _header.contentType; }
 
-std::string Response::getTransferEncoding() const {
-  return _header.transferEncoding;
-}
+int Response::getContentLength() const { return _header.contentLenght; }
 
-std::string Response::getAcceptRanges() const { return _header.acceptRanges; }
-
-std::string Response::getLocation() const { return _header.location; }
-
-std::string Response::getServer() const { return _header.server; }
-
-std::string Response::getWwwAuthenticate() const {
-  return _header.wwwAuthenticate;
-}
+std::string Response::getBody() const { return _body; }
