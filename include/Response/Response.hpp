@@ -12,7 +12,7 @@ struct Header {
   std::string reasonPhrase;
 
   // Entity-Header Fields
-  int contentLenght;
+  int contentLength;
   std::string contentType;
 };
 
@@ -35,7 +35,7 @@ class Response {
   void setStatusCode(int statusCode);
   void setReasonPhrase(int setReasonPhrase);
   void setReasonPhrase(std::string reasonPhrase);
-  void setContentLength(int contentLenght);
+  void setContentLength(int contentLength);
   void setContentType(std::string contentType);
   void setBody(std::string body);
 

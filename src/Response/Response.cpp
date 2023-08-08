@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Response::Response() {}
+Response::Response() { _header.protocolVersion = "HTTP/1.1"; }
 
 Response::Response(int statusCode, std::string contentType,
                    const std::string body) {
@@ -12,7 +12,7 @@ Response::Response(int statusCode, std::string contentType,
   _header.statusCode = statusCode;
   setReasonPhrase(statusCode);
   _header.contentType = contentType;
-  _header.contentLenght = body.length();
+  _header.contentLength = body.length();
   _body = body;
 }
 
@@ -29,6 +29,7 @@ Response::~Response() {}
 Response &Response::operator=(const Response &assign) {
   if (this != &assign) {
     _header = assign._header;
+    _body = assign._body;
   }
   return *this;
 }
@@ -60,20 +61,37 @@ void Response::setReasonPhrase(std::string reasonPhrase) {
 }
 
 void Response::setReasonPhrase(int statusCode) {
-  if (statusCode == 200) _header.reasonPhrase = "OK";
-  if (statusCode == 404) _header.reasonPhrase = "Not Found";
-  if (statusCode == 500) _header.reasonPhrase = "Internal Server Error";
+  std::string reasonPhrase;
+
+  switch (statusCode) {
+    case 200:
+      reasonPhrase = "OK";
+      break;
+    case 404:
+      reasonPhrase = "Not Found";
+      break;
+    case 500:
+      reasonPhrase = "Internal Server Error";
+      break;
+    default:
+      reasonPhrase = "Unknown";
+      break;
+  }
+  _header.reasonPhrase = reasonPhrase;
 }
 
 void Response::setContentType(std::string contentType) {
   _header.contentType = contentType;
 }
 
-void Response::setContentLength(int contentLenght) {
-  _header.contentLenght = contentLenght;
+void Response::setContentLength(int contentLength) {
+  _header.contentLength = contentLength;
 }
 
-void Response::setBody(std::string body) { _body = body; }
+void Response::setBody(std::string body) {
+  _body = body;
+  _header.contentLength = body.length();
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -89,6 +107,6 @@ std::string Response::getReasonPhrase() const { return _header.reasonPhrase; }
 
 std::string Response::getContentType() const { return _header.contentType; }
 
-int Response::getContentLength() const { return _header.contentLenght; }
+int Response::getContentLength() const { return _header.contentLength; }
 
 std::string Response::getBody() const { return _body; }
