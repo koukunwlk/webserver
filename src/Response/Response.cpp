@@ -7,7 +7,7 @@
 Response::Response() {}
 
 Response::Response(int statusCode, std::string contentType,
-                   const std::string &body) {
+                   const std::string body) {
   _header.protocolVersion = "HTTP/1.1";
   _header.statusCode = statusCode;
   setReasonPhrase(statusCode);

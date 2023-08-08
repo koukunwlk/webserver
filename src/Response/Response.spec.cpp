@@ -61,9 +61,15 @@ TEST(ResponseClass, checkConstructorTest) {
 TEST(ResponseClass, checkOstreamOperatorOverloadTest) {
   Response res(200, "text/html; charset=utf-8", "Hello World!");
 
-  std::cout << "---- OSTREAM Operator Overload TEST ----" << std::endl;
-  std::cout << res << std::endl;
-  std::cout << "---- ----" << std::endl;
+  std::string responseHeader =
+      "HTTP/1.1 200 OK\r\nContent-Type: text/html; "
+      "charset=utf-8\r\nContent-Length: 12\r\n\r\nHello World!";
+
+  std::stringstream ostreamResult;
+
+  ostreamResult << res;
+
+  EXPECT_EQ(ostreamResult.str(), responseHeader);
 }
 
 int main(int argc, char **argv) {

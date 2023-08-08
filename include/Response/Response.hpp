@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <ostream>
+#include <sstream>
 #include <string>
 
 struct Header {
@@ -19,7 +20,7 @@ class Response {
  public:
   // Constructors
   Response();
-  Response(int statusCode, std::string contentType, const std::string &body);
+  Response(int statusCode, std::string contentType, const std::string body);
   Response(const Response &copy);
 
   // Destructor
