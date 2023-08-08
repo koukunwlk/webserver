@@ -1,4 +1,5 @@
 #include "Response/Response.hpp"
+
 #include "gtest/gtest.h"
 
 // Status Code Tests
