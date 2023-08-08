@@ -30,7 +30,7 @@ class Response {
   Response &operator=(const Response &assign);
   friend std::ostream &operator<<(std::ostream &os, const Response &res);
 
-  // Methods
+  // Accessors
   void setProtocolVersion(std::string protocol);
   void setStatusCode(int statusCode);
   void setReasonPhrase(int setReasonPhrase);
@@ -38,8 +38,6 @@ class Response {
   void setContentLength(int contentLength);
   void setContentType(std::string contentType);
   void setBody(std::string body);
-
-  // Accessors
   std::string getProtocolVersion() const;
   int getStatusCode() const;
   std::string getReasonPhrase() const;

@@ -48,6 +48,24 @@ std::ostream &operator<<(std::ostream &os, const Response &res) {
 ** --------------------------------- METHODS ----------------------------------
 */
 
+/*
+** --------------------------------- ACCESSOR ---------------------------------
+*/
+
+int Response::getStatusCode() const { return _header.statusCode; }
+
+std::string Response::getProtocolVersion() const {
+  return _header.protocolVersion;
+}
+
+std::string Response::getReasonPhrase() const { return _header.reasonPhrase; }
+
+std::string Response::getContentType() const { return _header.contentType; }
+
+int Response::getContentLength() const { return _header.contentLength; }
+
+std::string Response::getBody() const { return _body; }
+
 void Response::setStatusCode(int statusCode) {
   _header.statusCode = statusCode;
 }
@@ -92,21 +110,3 @@ void Response::setBody(std::string body) {
   _body = body;
   _header.contentLength = body.length();
 }
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
-int Response::getStatusCode() const { return _header.statusCode; }
-
-std::string Response::getProtocolVersion() const {
-  return _header.protocolVersion;
-}
-
-std::string Response::getReasonPhrase() const { return _header.reasonPhrase; }
-
-std::string Response::getContentType() const { return _header.contentType; }
-
-int Response::getContentLength() const { return _header.contentLength; }
-
-std::string Response::getBody() const { return _body; }
