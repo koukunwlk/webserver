@@ -1,40 +1,72 @@
 #include "Parser/Parser.hpp"
 #include <gtest/gtest.h>
 
-TEST(ParserTest, ShouldSplitLineInSymbols) {
-  // Arrange
-  std::string line = "this is a exemple line\n";
-  std::stringstream symbols = std::stringstream(line);
-  std::string symbol;
-  Parser newParser;
-  std::vector<std::string> expectedSymbols;
-  while (symbols >> symbol) expectedSymbols.push_back(symbol);
+TEST(ParserTest, ShouldIdentifyAInvalidServerBlockDefinition) {
+  Parser* p = new Parser();
+  std::string buffer = "serverxpto {";
 
-  // Act
-  newParser.parseLine(line);
-  std::vector<std::string> receivedSymbols = newParser.getSymbols();
-
-  // Assert
-  for (size_t i = 0; i < expectedSymbols.size(); i++) {
-    ASSERT_EQ(expectedSymbols[i], receivedSymbols[i]);
-  }
+  EXPECT_THROW(
+      {
+        try {
+          p->parseLine(buffer);
+        } catch (std::exception& e) {
+          EXPECT_STREQ("Invalid block definition serverxpto", e.what());
+          throw;
+        }
+      },
+      ParsingException);
 }
 
-TEST(ParserTest, ShouldGenerateToken) {
-  // Arrange
-  std::string line = "this is a exemple line\n";
-  std::stringstream symbols = std::stringstream(line);
-  std::string symbol;
-  Parser newParser;
+TEST(ParserTest, ShouldThrowIfBlockDefinitionHasArguments) {
+  Parser* p = new Parser();
+  std::string buffer = "server xpto {";
 
-  // Act
-  newParser.parseLine(line);
-  std::map<TokenTypes, Token> tokens = newParser.getTokens();
-
-  ASSERT_EQ(tokens[0].first, TokenTypes[identifier]);
+  EXPECT_THROW(
+      {
+        try {
+          p->parseLine(buffer);
+        } catch (std::exception& e) {
+          EXPECT_STREQ("Invalid number of arguments for a block", e.what());
+          throw;
+        }
+      },
+      ParsingException);
 }
 
-int main(int argc, char **argv) {
+TEST(ParserTest, ShouldIdentifyAMissingCurlyBraces) {
+  Parser* p = new Parser();
+  std::string buffer = "server ";
+
+  EXPECT_THROW(
+      {
+        try {
+          p->parseLine(buffer);
+        } catch (std::exception& e) {
+          EXPECT_STREQ("Missing '{'", e.what());
+          throw;
+        }
+      },
+      ParsingException);
+}
+
+TEST(ParserTest, ShoulReturnTheFirstBlock) {
+  Parser* p = new Parser();
+  std::string buffer = "server {";
+  p->parseLine(buffer);
+  Block::iterator it = p->getNextServerBlock();
+  EXPECT_EQ("server", it->first);
+}
+
+/* TEST(ParserTest, ShouldReadBlockContent) {
+  Parser* p = new Parser();
+  std::string buffer = "server {\n";
+  buffer += "server_name xpto.com abcde.com\n";
+  buffer += "listen 80";
+  buffer += "error_page 404 /404.html\n";
+  buffer += "client_max_body_size 100M\n";
+} */
+
+int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
