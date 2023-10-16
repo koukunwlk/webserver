@@ -36,13 +36,13 @@ void Block::isValidBlockDefinition(string name) throw (ParsingException) {
 }
 
 void Parser::parseLine(string line) {
-  Block *block;
-  Block *childBlock;
+  static Block *block;
+  static Block *childBlock;
   if (line.find("{") != string::npos) {
     if(block) {
-      childBlock = createBlock(line);
+      childBlock = Parser::createBlock(line);
     }
-    block = createBlock(line);
+    block = Parser::createBlock(line);
   }
   else if(line.compare("}") == 0) {
     if(childBlock) {
@@ -61,4 +61,14 @@ void Parser::parseLine(string line) {
     }
     block->addProperty(tokens[0], vector<string>(tokens.begin() + 1, tokens.end()));
   }
+}
+
+void Block::addChildBlock(Block block) {
+  this->_childBlocks.push_back(block);
+}
+
+void Block::addProperty(string key, vector<string> value) {
+  Property property;
+  property[key] = value;
+  this->_properties.push_back(property);
 }
