@@ -1,4 +1,4 @@
-#include "ConfigFIleParser/ConfigFIleParser.hpp"
+#include "ConfigFileParser/ConfigFileParser.hpp"
 #include <gtest/gtest.h>
 
 TEST(ParserTest, ShouldIdentifyAInvalidServerBlockDefinition) {

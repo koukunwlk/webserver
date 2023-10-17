@@ -1,4 +1,4 @@
-#include "ConfigFIleParser/ConfigFIleParser.hpp"
+#include "ConfigFileParser/ConfigFileParser.hpp"
 using namespace std;
 
 Block::Block(string name) { _name = name; }
