@@ -38,11 +38,14 @@ void Block::isValidBlockDefinition(string name) throw (ParsingException) {
 void Parser::parseLine(string line) {
   static Block *block;
   static Block *childBlock;
+
   if (line.find("{") != string::npos) {
-    if(block) {
+    if(static_cast<void*>(block) != NULL) {
       childBlock = Parser::createBlock(line);
     }
-    block = Parser::createBlock(line);
+    else {
+      block = Parser::createBlock(line);
+    }
   }
   else if(line.compare("}") == 0) {
     if(childBlock) {
@@ -71,4 +74,16 @@ void Block::addProperty(string key, vector<string> value) {
   Property property;
   property[key] = value;
   this->_properties.push_back(property);
+}
+
+std::vector<Block> Block::getChildBlocks() {
+  return this->_childBlocks;
+}
+
+std::vector<Block> Parser::getBlocks() {
+  return this->_blocks;
+}
+
+string Block::getName() {
+  return this->_name;
 }

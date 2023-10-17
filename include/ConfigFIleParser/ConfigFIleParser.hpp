@@ -35,6 +35,7 @@ class Parser {
   ~Parser();
   void parseLine(std::string line);
   static Block* createBlock(std::string line);
+  std::vector<Block> getBlocks();
 
  private:
   std::vector<Block> _blocks;
