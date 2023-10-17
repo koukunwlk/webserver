@@ -18,7 +18,7 @@ class Block {
   std::string getName();
   std::vector<Block> getChildBlocks();
   Property getNextProperty();
-  void addProperty(std::string key, std::vector<std::string>  value);
+  void addProperty(std::string key, std::vector<std::string> value);
   void addChildBlock(Block block);
   static void isValidBlockDefinition(std::string line) throw(ParsingException);
 
@@ -26,7 +26,6 @@ class Block {
   std::string _name;
   std::vector<Property> _properties;
   std::vector<Block> _childBlocks;
-
 };
 
 class Parser {
