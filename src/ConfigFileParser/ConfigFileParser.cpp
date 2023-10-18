@@ -29,7 +29,7 @@ Block* Parser::createBlock(string line) {
   return block;
 }
 
-void Block::isValidBlockDefinition(string name) throw(ParsingException) {
+void Block::isValidBlockDefinition(string name) {
   if (name.compare("server") != 0 && name.compare("location") != 0) {
     throw ParsingException("Invalid block name " + name);
   }
