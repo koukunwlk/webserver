@@ -8,7 +8,7 @@
 
 class Block;
 
-typedef std::map<std::string, std::vector<std::string> > Property;
+typedef std::pair<std::string, std::vector<std::string> > Property;
 
 class Block {
  public:
