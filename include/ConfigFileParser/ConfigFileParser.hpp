@@ -20,7 +20,7 @@ class Block {
   Property getNextProperty();
   void addProperty(std::string key, std::vector<std::string> value);
   void addChildBlock(Block block);
-  static void isValidBlockDefinition(std::string line) throw(ParsingException);
+  static void isValidBlockDefinition(std::string line);
 
  private:
   std::string _name;

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "Parser/Parser.hpp"
+#include "ConfigFileParser/ConfigFileParser.hpp"
 #include "WebServerException/WebServerException.hpp"
 
 #endif /* ***************************************************** WEBSERV_H */
