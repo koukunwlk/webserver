@@ -1,23 +1,24 @@
 #pragma once
 
-#include "Response/Response.hpp"
-#include "Request/Request.hpp"
-#include "WebServerException/WebServerException.hpp"
-#include <iostream>
-#include <unistd.h>
-#include <fstream>
-#include <cstring>
 #include <dirent.h>
+#include <unistd.h>
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+
+#include "Request/Request.hpp"
+#include "Response/Response.hpp"
+#include "WebServerException/WebServerException.hpp"
 
 #define VALID_REQUEST 0
-#define INVALID_HEADER  1
+#define INVALID_HEADER 1
 #define INVALID_METHOD 2
-
 
 class Handler {
  public:
   Handler();
-  Handler(Request*);
+  Handler(Request *);
   ~Handler();
 
   Response &getResponse();

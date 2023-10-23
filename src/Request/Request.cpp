@@ -174,28 +174,20 @@ int Request::setValidationStatus(int status) {
 
 std::string Request::getServerRoot() const { return _serverRoot; }
 
-void Request::setServerRoot(std::string root) {
-  _serverRoot = root;
-}
+void Request::setServerRoot(std::string root) { _serverRoot = root; }
 
 std::string Request::getRedirect() const { return _redirect; }
 
-void Request::setRedirect(std::string location) {
-  _redirect = location;
-}
+void Request::setRedirect(std::string location) { _redirect = location; }
 
 std::string Request::getIndex() const { return _index; }
 
-void Request::setIndex(std::string indexFile) {
-  _index = indexFile;
-}
+void Request::setIndex(std::string indexFile) { _index = indexFile; }
 
 bool Request::getAutoIndex() const { return _autoIndex; }
 
 void Request::setAutoIndex(std::string autoIndex) {
   _autoIndex = (0 == autoIndex.compare("on"));
 }
-
-
 
 /* ************************************************************************** */

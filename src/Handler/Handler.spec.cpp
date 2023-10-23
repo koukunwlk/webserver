@@ -25,8 +25,7 @@ TEST(HandlerClass, ValidationStatusInvalidHeader) {
       "Content-Type: text/plain\n"
       "Content-Length: 0\r\n\r\n";
 
-  const char expected[] =
-      "<h1>Error 400</h1>";
+  const char expected[] = "<h1>Error 400</h1>";
 
   Request req(bufferMock);
   req.setValidationStatus(INVALID_HEADER);
@@ -169,8 +168,7 @@ TEST(HandlerClass, ValidateFolderInvalidIndexFileAutoIndexOff) {
       "Content-Type: text/plain\n"
       "Content-Length: 0\r\n\r\n";
 
-  const char expected[] =
-      "<h1>Error 404</h1>";
+  const char expected[] = "<h1>Error 404</h1>";
 
   Request req(bufferMock);
   req.setValidationStatus(VALID_REQUEST);
