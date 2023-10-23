@@ -110,3 +110,9 @@ void Response::setBody(std::string body) {
   _body = body;
   _header.contentLength = body.length();
 }
+
+void Response::setLocation(std::string redirect) {
+  _header.location = redirect;
+  this->setStatusCode(301);
+  this->setReasonPhrase("Moved Permanently");
+}

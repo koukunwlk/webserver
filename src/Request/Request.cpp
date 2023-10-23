@@ -166,4 +166,36 @@ std::string Request::getHeaderContentType() const {
 
 int Request::getHeaderContentLength() const { return _header.contentLength; }
 
+int Request::getValidationStatus() const { return _validationStatus; }
+
+int Request::setValidationStatus(int status) {
+  return _validationStatus = status;
+}
+
+std::string Request::getServerRoot() const { return _serverRoot; }
+
+void Request::setServerRoot(std::string root) {
+  _serverRoot = root;
+}
+
+std::string Request::getRedirect() const { return _redirect; }
+
+void Request::setRedirect(std::string location) {
+  _redirect = location;
+}
+
+std::string Request::getIndex() const { return _index; }
+
+void Request::setIndex(std::string indexFile) {
+  _index = indexFile;
+}
+
+bool Request::getAutoIndex() const { return _autoIndex; }
+
+void Request::setAutoIndex(std::string autoIndex) {
+  _autoIndex = (0 == autoIndex.compare("on"));
+}
+
+
+
 /* ************************************************************************** */

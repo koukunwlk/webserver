@@ -9,7 +9,7 @@
 
 #define CRLF "\r\n\r\n"
 
-typedef struct Header {
+typedef struct RequestHeader {
   std::string rawData;
   // Request-Line
   std::string method;
@@ -23,7 +23,7 @@ typedef struct Header {
   // Hop-by-hop headers
   bool keepAlive;
 
-} header_t;
+} reqHeader_t;
 
 class Request {
  public:
@@ -41,10 +41,30 @@ class Request {
   std::string getHeaderContentType() const;
   int getHeaderContentLength() const;
 
+  int getValidationStatus() const;
+  int setValidationStatus(int);
+
+  std::string getServerRoot() const;
+  void setServerRoot(std::string);
+  std::string getRedirect() const;
+  void setRedirect(std::string);
+  std::string getIndex() const;
+  void setIndex(std::string);
+  bool getAutoIndex() const;
+  void setAutoIndex(std::string);
+
  private:
   std::string _rawData;
-  header_t _header;
+  reqHeader_t _header;
   std::string _body;
+
+  // Propriedades do ServerConfig
+  std::string _serverRoot;
+  std::string _redirect;
+  std::string _index;
+  bool _autoIndex;
+
+  int _validationStatus;
 
   void parseRequestData();
   void parseRawHeader();
