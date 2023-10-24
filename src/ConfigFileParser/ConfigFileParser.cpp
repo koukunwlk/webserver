@@ -59,19 +59,23 @@ void Parser::parseLine(string line) {
     for (string s; iss >> s;) {
       tokens.push_back(s);
     }
-    block->addProperty(tokens[0],
-                       vector<string>(tokens.begin() + 1, tokens.end()));
+    if (static_cast<void*>(childBlock) != NULL)
+      Parser::addProperty(tokens[0],
+                          vector<string>(tokens.begin() + 1, tokens.end()),
+                          childBlock);
+    else if (static_cast<void*>(block) != NULL)
+      Parser::addProperty(
+          tokens[0], vector<string>(tokens.begin() + 1, tokens.end()), block);
   }
 }
 
 void Block::addChildBlock(Block block) { this->_childBlocks.push_back(block); }
 
-void Block::addProperty(string key, vector<string> value) {
+void Parser::addProperty(string key, vector<string> value, Block* block) {
   Property property;
   property.first = key;
   property.second = value;
-
-  this->_properties.push_back(property);
+  block->setProperty(property);
 }
 
 std::vector<Block> Block::getChildBlocks() { return this->_childBlocks; }
@@ -85,3 +89,52 @@ Property Block::getNextProperty() {
   this->_properties.erase(this->_properties.begin());
   return property;
 }
+
+void Block::setProperty(Property property) {
+  this->_properties.push_back(property);
+}
+
+void Parser::populateServerConfigs() {}
+
+void createServer(Block server) {
+  struct ServerConfig serverConfig;
+  Property currentProperty = server.getNextProperty();
+  string properties[7] = {"port",    "server_name", "root",
+                          "index",   "error_page",  "client_max_body_size",
+                          "location"};
+  while (currentProperty.first.size() != 0) {
+    if (currentProperty.first.compare("port") == 0) {
+      std::istringstream(currentProperty.first) >> serverConfig.port;
+    }
+    if (currentProperty.first.compare("server_name") == 0) {
+      serverConfig.server_names = currentProperty.second;
+    }
+
+    if (currentProperty.first.compare("root") == 0) {
+      serverConfig.root = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("index") == 0) {
+      serverConfig.index = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("error_page") == 0) {
+      error_page errorPage;
+      std::istringstream(currentProperty.second[0]) >> errorPage.code;
+      errorPage.path = currentProperty.second[1];
+      serverConfig.error_page.push_back(errorPage);
+    }
+
+    if (currentProperty.first.compare("client_max_body_size") == 0) {
+      serverConfig.client_max_body_size = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("location") == 0) {
+      createLocation(server);
+    }
+
+    currentProperty = server.getNextProperty();
+  }
+}
+
+void createLocation(Block location) {}
