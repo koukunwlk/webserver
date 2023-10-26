@@ -23,7 +23,11 @@ class Handler {
 
   Response &getResponse();
 
-  int handleRequest();
+  void setErrorPage(int code);
+  void handleRequest();
+  int handleGET();
+  // int handlePOST();
+  // int handleDELETE();
   int handleError();
 
  private:
@@ -31,7 +35,9 @@ class Handler {
   Response _res;
 };
 
-std::string getHtmlPage(std::string root, std::string filepath);
-std::string getPhpPage(std::string root, std::string filepath);
-std::string listFolder(std::string fullpath);
+int getHtmlPage(std::string &page, std::string root, std::string filepath);
+int getPhpPage(std::string &page, std::string root, std::string filepath);
+int getFolder(Request &req, std::string &page, std::string root,
+              std::string filepath);
+int listFolderContent(std::string &page, std::string fullpath);
 bool endsWith(std::string fullString, std::string ending);
