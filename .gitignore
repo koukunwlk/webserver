@@ -38,5 +38,6 @@
 tests/**
 
 webserver
+tests/
 
 .gitignore
