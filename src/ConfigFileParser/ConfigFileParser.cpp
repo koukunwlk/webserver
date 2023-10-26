@@ -99,9 +99,7 @@ void Parser::populateServerConfigs() {}
 void createServer(Block server) {
   struct ServerConfig serverConfig;
   Property currentProperty = server.getNextProperty();
-  string properties[7] = {"port",    "server_name", "root",
-                          "index",   "error_page",  "client_max_body_size",
-                          "location"};
+  vector<Block> childBlocks = server.getChildBlocks();
   while (currentProperty.first.size() != 0) {
     if (currentProperty.first.compare("port") == 0) {
       std::istringstream(currentProperty.first) >> serverConfig.port;
@@ -115,7 +113,7 @@ void createServer(Block server) {
     }
 
     if (currentProperty.first.compare("index") == 0) {
-      serverConfig.index = currentProperty.second[0];
+      serverConfig.index = currentProperty.second;
     }
 
     if (currentProperty.first.compare("error_page") == 0) {
@@ -132,9 +130,49 @@ void createServer(Block server) {
     if (currentProperty.first.compare("location") == 0) {
       createLocation(server);
     }
-
     currentProperty = server.getNextProperty();
+  }
+
+  if (childBlocks.size() != 0) {
+    for (int i = 0; i < childBlocks.size(); i++) {
+      serverConfig.locations.push_back(createLocation(childBlocks[i]));
+    }
   }
 }
 
-void createLocation(Block location) {}
+Location createLocation(Block location) {
+  Location locationConfig;
+  Property currentProperty = location.getNextProperty();
+
+  while (currentProperty.first.size() != 0) {
+    if (currentProperty.first.compare("url") == 0) {
+      locationConfig.url = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("extension") == 0) {
+      locationConfig.extension = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("root") == 0) {
+      locationConfig.root = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("index") == 0) {
+      locationConfig.index = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("error_page") == 0) {
+      error_page errorPage;
+      std::istringstream(currentProperty.second[0]) >> errorPage.code;
+      errorPage.path = currentProperty.second[1];
+      locationConfig.error_page.push_back(errorPage);
+    }
+
+    if (currentProperty.first.compare("methods") == 0) {
+      locationConfig.methods = currentProperty.second;
+    }
+
+    currentProperty = location.getNextProperty();
+  }
+  return locationConfig;
+}

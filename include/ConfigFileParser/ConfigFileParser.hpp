@@ -16,12 +16,14 @@ struct error_page {
   std::string path;
 };
 
-struct location {
+struct Location {
   std::string url;
   std::string extension;
 
   std::string root;
   std::string index;
+  bool autoindex;
+  std::string redirect;
   std::vector<error_page> error_page;
   std::vector<std::string> methods;
 };
@@ -30,10 +32,10 @@ struct ServerConfig {
   int port;
   std::vector<std::string> server_names;
   std::string root;
-  std::string index;
+  std::vector<std::string> index;
   std::vector<error_page> error_page;
   std::string client_max_body_size;
-  std::vector<location> locations;
+  std::vector<Location> locations;
 };
 
 class Block {
