@@ -16,12 +16,24 @@
 #include "WebServerException/HostingException.hpp"
 
 #define MAX_EVENTS 10
-#define PORT 8080
+#define MAX_HEADER 8192
+#define PORT 5000
 
 typedef struct ThreadArgs {
   int epollFd;
   int listenFd;
 } ThreadArgs;
+
+typedef enum RequestStatus {
+    Reading,
+    Writing,
+    Ended
+} RequestStatus;
+
+typedef struct requestInfo {
+  int fd;
+  RequestStatus status;
+} RequestInfo;
 
 class Server {
  public:

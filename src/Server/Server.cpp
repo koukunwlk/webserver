@@ -1,8 +1,7 @@
 #include "Server/Server.hpp"
 
 // Constructors
-Server::Server() {
-  fillAddrStruct(); }
+Server::Server() { fillAddrStruct(); }
 
 // Destructor
 Server::~Server() { closeServer(); }
@@ -22,8 +21,10 @@ int Server::setupServer() {
   return EXIT_SUCCESS;
 }
 
-void Server::closeServer() { close(this->_listenFd);
-  close(this->_epollFd);}
+void Server::closeServer() {
+  close(this->_listenFd);
+  close(this->_epollFd);
+}
 
 int Server::createSocketConnection() {
   if ((this->_listenFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -35,7 +36,8 @@ int Server::createSocketConnection() {
 
 int Server::makeAPortOnFileDescriptorReusable() {
   int on = 1;
-  if(setsockopt(this->_listenFd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
+  if (setsockopt(this->_listenFd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
+                 sizeof(on)) < 0) {
     std::cerr << "Error setting socket options" << std::endl;
     return EXIT_FAILURE;
   }
@@ -69,7 +71,7 @@ void *Server::thread(void *args) {
   struct epoll_event *events =
       (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
   if (events == NULL) {
-    std::cerr << "Error allocating events" << std::endl;
+    perror("event malloc");
   }
 
   struct sockaddr_in clientAddr;
@@ -78,48 +80,75 @@ void *Server::thread(void *args) {
   int numberToFds;
   while (1) {
     numberToFds = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+
     if (numberToFds <= 0) {
       std::cerr << "Error on epoll_wait" << std::endl;
     }
-    for (int i = 0; i < numberToFds; i++) {
+    for (int i = 0; i < numberToFds; ++i) {
       if (events[i].data.fd == listenFd) {
         while (1) {
           int clientFd =
               accept(listenFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-          if (clientFd == -1) {
-            perror("Error accepting");
+          if (clientFd < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+              break;
+            else {
+              perror("Accept error");
+              break;
+            }
           }
+
           fcntl(clientFd, F_SETFL, O_NONBLOCK);
           ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
 
-          char buffer[1024];
-          int bytesReceived;
-          std::string concatenatedData;
-          // GET REQUEST
-          while ((bytesReceived = read(clientFd, buffer, sizeof(buffer)))) {
-            std::string str(buffer);
-            concatenatedData += str;
-            std::cout.write(buffer, bytesReceived);
-          }
-          Request request(concatenatedData.c_str());
+          RequestInfo info;
+          info.fd = clientFd;
+          info.status = Reading;
 
-          // SEND RESPONSE
-            const char bufferMock[] =
-              "GET /teste.php HTTP/1.1\r\n"
-              "Host: localhost:3000\n"
-              "Content-Type: text/plain\n"
-              "Content-Length: 0\r\n\r\n";
-              ev.data.ptr = (void*)bufferMock;
+          ev.data.ptr = static_cast<void *>(&info);
 
-          if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) == -1) {
-            std::cerr << "Error on epoll_ctl" << std::endl;
+          if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
+            perror("epoll_ctl error ");
             continue;
           }
         }
+      } else {
+        RequestInfo *info = static_cast<RequestInfo *>(ev.data.ptr);
+        std::cout << "fd: " << info->fd << std::endl;
+        if (info->status == Reading) {
+          int bytesReceived;
+          char buffer[1024];
+          std::string concatenatedData;
+          while(1) {
+            bytesReceived = read(info->fd, buffer, sizeof(buffer));
+            if (bytesReceived < 0) {
+              if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+              else
+                perror("read");
+            }
+            else if (bytesReceived == 0)
+              break;
+            std::string str(buffer);
+            concatenatedData += str;
+          }
+          Request request(concatenatedData.c_str());
+          std::cout << request.getRawData() << std::endl;
+          info->status = Writing;
+        }
+        if (info->status == Writing) {
+          std::string response = "HTTP/1.1 200 OK\r\nteste";
+          // std::cout << response << std::endl;
+          write(info->fd, response.c_str(), response.length());
+          info->status = Ended;
+        }
+        if (info->status == Ended) {
+          close(info->fd);
+        }
       }
     }
-    // free(events);
   }
+  free(events);
 }
 
 void Server::fillThreadArgsStruct() {
@@ -143,7 +172,7 @@ int Server::bindSocket() {
 }
 
 int Server::putSocketToListen() {
-  if (listen(this->_listenFd, 64) == -1) {
+  if (listen(this->_listenFd, 10) == -1) {
     std::cerr << "Error putting socket to listen" << std::endl;
     return EXIT_FAILURE;
   }
@@ -159,8 +188,9 @@ int Server::createEpollInstance() {
 }
 
 int Server::addListenFdToEpoll() {
-  this->_epEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
+  this->_epEvent.events = EPOLLIN | EPOLLET;
   this->_epEvent.data.fd = this->_listenFd;
+
   if (epoll_ctl(this->_epollFd, EPOLL_CTL_ADD, this->_listenFd,
                 &this->_epEvent) == -1) {
     std::cerr << "Error adding socket to epoll" << std::endl;
