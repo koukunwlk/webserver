@@ -26,7 +26,7 @@ class Handler {
   void setErrorPage(int code);
   void handleRequest();
   int handleGET();
-  // int handlePOST();
+  int handlePOST();
   // int handleDELETE();
   int handleError();
 

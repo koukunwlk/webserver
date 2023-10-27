@@ -86,12 +86,21 @@ int Handler::handleGET() {
   return 0;
 }
 
+int Handler::handlePOST() {
+  _res.setStatusCode(201);
+  _res.setReasonPhrase("CREATED");
+  return 0;
+}
+
 void Handler::handleRequest() {
   int status = 0;
 
-  status += handleGET();
-  // status += handlePOST();
-  // status += handleDELETE();
+  if (_req->getHeaderMethod().compare("GET") == 0) {
+    status += handleGET();
+  } else if (_req->getHeaderMethod().compare("POST") == 0) {
+    status += handlePOST();
+  }
+  // status += handleDELETE();   
 
   if (status != 0) {
     return;

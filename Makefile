@@ -14,7 +14,14 @@ INC_D		=	include
 
 RAW_H		=	webserver.hpp
 
-RAW_C		=	main.cpp
+RAW_C		=	main.cpp \
+					WebServerException/WebServerException.cpp \
+					WebServerException/HostingException.cpp \
+					WebServerException/ParsingException.cpp \
+					WebServerException/RequestValidationException.cpp \
+					Handler/Handler.cpp \
+					Request/Request.cpp \
+					Response/Response.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
 INCLUDE	=	$(addprefix $(INC_D)/,$(RAW_H))

@@ -236,6 +236,38 @@ TEST(HandlerClass, ValidateInvalidFolder) {
   EXPECT_EQ(handler.getResponse().getBody(), expected);
 }
 
+TEST(HandlerClass, ValidateHandlePostResponse) {
+  const char bufferMock[] =
+      "POST /upload HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type: text/plain\n"
+      "Content-Length: 5\r\n\r\n"
+      "Texto";
+
+  Request req(bufferMock);
+  req.setValidationStatus(VALID_REQUEST);
+  Handler handler(&req);
+
+  EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_CREATED);
+  EXPECT_EQ(handler.getResponse().getReasonPhrase(), "CREATED");
+}
+
+TEST(HandlerClass, ValidateHandlePostUpload) {
+  const char bufferMock[] =
+      "POST /upload HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type: text/plain\n"
+      "Content-Length: 5\r\n\r\n"
+      "Texto";
+
+  Request req(bufferMock);
+  req.setValidationStatus(VALID_REQUEST);
+  Handler handler(&req);
+
+  EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_CREATED);
+  EXPECT_EQ(handler.getResponse().getReasonPhrase(), "CREATED");
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
