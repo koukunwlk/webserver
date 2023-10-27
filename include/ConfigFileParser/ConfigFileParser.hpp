@@ -11,7 +11,7 @@ class Block;
 
 typedef std::pair<std::string, std::vector<std::string> > Property;
 
-struct error_page {
+struct Error_page {
   int code;
   std::string path;
 };
@@ -24,7 +24,7 @@ struct Location {
   std::string index;
   bool autoindex;
   std::string redirect;
-  std::vector<error_page> error_page;
+  std::vector<Error_page> error_page;
   std::vector<std::string> methods;
 };
 
@@ -33,7 +33,7 @@ struct ServerConfig {
   std::vector<std::string> server_names;
   std::string root;
   std::vector<std::string> index;
-  std::vector<error_page> error_page;
+  std::vector<Error_page> error_page;
   std::string client_max_body_size;
   std::vector<Location> locations;
 };
@@ -73,3 +73,6 @@ class Parser {
   std::vector<Block> _blocks;
   std::vector<ServerConfig> _serverConfigs;
 };
+
+Location createLocation(Block location);
+void createServer(Block server);

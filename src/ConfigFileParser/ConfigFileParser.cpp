@@ -117,7 +117,7 @@ void createServer(Block server) {
     }
 
     if (currentProperty.first.compare("error_page") == 0) {
-      error_page errorPage;
+      Error_page errorPage;
       std::istringstream(currentProperty.second[0]) >> errorPage.code;
       errorPage.path = currentProperty.second[1];
       serverConfig.error_page.push_back(errorPage);
@@ -134,7 +134,7 @@ void createServer(Block server) {
   }
 
   if (childBlocks.size() != 0) {
-    for (int i = 0; i < childBlocks.size(); i++) {
+    for (size_t i = 0; i < childBlocks.size(); i++) {
       serverConfig.locations.push_back(createLocation(childBlocks[i]));
     }
   }
@@ -162,7 +162,7 @@ Location createLocation(Block location) {
     }
 
     if (currentProperty.first.compare("error_page") == 0) {
-      error_page errorPage;
+      Error_page errorPage;
       std::istringstream(currentProperty.second[0]) >> errorPage.code;
       errorPage.path = currentProperty.second[1];
       locationConfig.error_page.push_back(errorPage);
