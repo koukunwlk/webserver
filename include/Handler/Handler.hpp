@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <unistd.h>
 
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -27,7 +28,7 @@ class Handler {
   void handleRequest();
   int handleGET();
   int handlePOST();
-  // int handleDELETE();
+  int handleDELETE();
   int handleError();
 
  private:

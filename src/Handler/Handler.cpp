@@ -92,6 +92,22 @@ int Handler::handlePOST() {
   return 0;
 }
 
+int Handler::handleDELETE() {
+  std::string rootFolder = _req->getServerRoot();
+  std::string fileName = _req->getBody();
+  std::string fullPath = rootFolder + "/" + fileName;
+
+  if (access(fullPath.c_str(), F_OK)) {
+    std::cout << fullPath << "\n";
+    return 1;
+  }
+
+  remove(fullPath.c_str());
+  _res.setStatusCode(200);
+  _res.setReasonPhrase("OK");
+  return 0;
+}
+
 void Handler::handleRequest() {
   int status = 0;
 
@@ -99,8 +115,9 @@ void Handler::handleRequest() {
     status += handleGET();
   } else if (_req->getHeaderMethod().compare("POST") == 0) {
     status += handlePOST();
+  } else if (_req->getHeaderMethod().compare("DELETE") == 0) {
+    status += handleDELETE();
   }
-  // status += handleDELETE();   
 
   if (status != 0) {
     return;
