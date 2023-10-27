@@ -87,18 +87,21 @@ void *Server::thread(void *args) {
           int clientFd =
               accept(listenFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
           if (clientFd == -1) {
-            std::cerr << "Error on accept" << std::endl;
+            perror("Error accepting");
           }
           fcntl(clientFd, F_SETFL, O_NONBLOCK);
           ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
 
           char buffer[1024];
           int bytesReceived;
-
+          std::string concatenatedData;
           // GET REQUEST
           while ((bytesReceived = read(clientFd, buffer, sizeof(buffer)))) {
+            std::string str(buffer);
+            concatenatedData += str;
             std::cout.write(buffer, bytesReceived);
           }
+          Request request(concatenatedData.c_str());
 
           // SEND RESPONSE
             const char bufferMock[] =

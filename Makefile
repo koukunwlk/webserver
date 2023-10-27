@@ -12,9 +12,14 @@ OBJ_D		=	obj
 SRC_D		=	src
 INC_D		=	include
 
-RAW_H		=	webserver.hpp
+RAW_H		=	webserver.hpp Server/Server.hpp Request/Request.hpp \
+				WebServerException/RequestValidationException.hpp \
+				WebServerException/WebServerException.hpp
 
-RAW_C		=	main.cpp
+RAW_C		=	main.cpp Server/Server.cpp \
+				Request/Request.cpp \
+				WebServerException/RequestValidationException.cpp \
+				WebServerException/WebServerException.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
 INCLUDE	=	$(addprefix $(INC_D)/,$(RAW_H))
@@ -39,7 +44,7 @@ $(OBJ_D)/%.o : $(SRC_D)/%.cpp
 #To execute a testfile just run make test_file FILENAME=filename without the .spec.cpp
 #Our test files must be ended with .spec.cpp
 .PHONY: test_file
-test_file: 
+test_file:
 	@filename="$(FILENAME)"; \
     filepath=$$(find . -name "$$filename.spec.cpp" -type f -print -quit); \
     if [ -n "$$filepath" ]; then \
