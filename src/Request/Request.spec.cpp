@@ -128,7 +128,7 @@ TEST(RequestClass, BodyParse) {
 
   Request req(bufferMock);
 
-  EXPECT_EQ(req.getBody(), "SampleBody");
+  EXPECT_STREQ(req.getBody(), "SampleBody");
 }
 
 TEST(RequestClass, BodyWrongContentLengthException) {

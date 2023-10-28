@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -32,8 +33,9 @@ class Request {
 
   std::string getRawData() const;
 
-  std::string getBody() const;
+  char *getBody() const;
 
+  std::string getHeaderRawDate() const;
   std::string getHeaderMethod() const;
   std::string getHeaderTarget() const;
   std::string getHeaderProtocol() const;
@@ -54,9 +56,9 @@ class Request {
   void setAutoIndex(std::string);
 
  private:
-  std::string _rawData;
+  const char *_rawData;
   reqHeader_t _header;
-  std::string _body;
+  char *_body;
 
   // Propriedades do ServerConfig
   std::string _serverRoot;

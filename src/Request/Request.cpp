@@ -6,7 +6,6 @@
 
 Request::Request(const char* rawData) : _rawData(rawData) {
   parseRequestData();
-  validate();
 }
 
 /*
@@ -31,16 +30,18 @@ std::ostream& operator<<(std::ostream& o, Request const& i) {
 void Request::parseRequestData() {
   parseRawHeader();
   parseHeaderProperties();
+  validate();
   parseBody();
 }
 
 void Request::parseRawHeader() {
-  std::size_t delim = _rawData.find(CRLF);
+  std::string rawData(_rawData);
+  std::size_t delim = rawData.find(CRLF);
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
   }
 
-  _header.rawData = _rawData.substr(0, delim);
+  _header.rawData = rawData.substr(0, delim);
 }
 
 void Request::parseHeaderProperties() {
@@ -108,7 +109,18 @@ std::string Request::getPropertyValueFrom(std::string line) {
   return propertyValue;
 }
 
-void Request::parseBody() { _body = _rawData.substr(_rawData.find(CRLF) + 4); }
+void Request::parseBody() {
+  if (this->getHeaderContentLength() < 1) {
+    return;
+  }
+  std::string rawData(_rawData);
+  size_t reqLen = strlen(_rawData);
+  size_t headerSize = reqLen - this->getHeaderContentLength();
+  _body = new char[this->getHeaderContentLength()];
+  memcpy(_body, _rawData + headerSize, this->getHeaderContentLength());
+  // _body = bodyBuffer;
+  // _body = _rawData.substr(_rawData.find(CRLF) + 4);
+}
 
 void Request::validate() {
   validateMethod();
@@ -138,8 +150,15 @@ void Request::validateContentLength() {
 }
 
 void Request::validateBody() {
-  size_t contentLength = static_cast<size_t>(_header.contentLength);
-  if (contentLength != _body.size()) {
+  size_t contentLength = static_cast<size_t>(this->getHeaderContentLength());
+
+  if (contentLength == 0) {
+    return;
+  }
+  size_t reqLen = strlen(_rawData);
+  size_t headerSize = this->getHeaderRawDate().length() + 4;
+
+  if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
   }
 }
@@ -148,11 +167,13 @@ void Request::validateBody() {
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-std::string Request::getBody() const { return _body; }
+char* Request::getBody() const { return _body; }
 
 std::string Request::getRawData() const { return _rawData; }
 
 std::string Request::getHeaderTarget() const { return _header.target; }
+
+std::string Request::getHeaderRawDate() const { return _header.rawData; }
 
 std::string Request::getHeaderMethod() const { return _header.method; }
 
