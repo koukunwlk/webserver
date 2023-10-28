@@ -16,10 +16,14 @@ RAW_H		=	webserver.hpp Server/Server.hpp Request/Request.hpp \
 				WebServerException/RequestValidationException.hpp \
 				WebServerException/WebServerException.hpp
 
-RAW_C		=	main.cpp Server/Server.cpp \
-				Request/Request.cpp \
-				WebServerException/RequestValidationException.cpp \
-				WebServerException/WebServerException.cpp
+RAW_C		=	main.cpp \
+					WebServerException/WebServerException.cpp \
+					WebServerException/HostingException.cpp \
+					WebServerException/ParsingException.cpp \
+					WebServerException/RequestValidationException.cpp \
+					Handler/Handler.cpp \
+					Request/Request.cpp \
+					Response/Response.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
 INCLUDE	=	$(addprefix $(INC_D)/,$(RAW_H))
