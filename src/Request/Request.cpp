@@ -118,8 +118,6 @@ void Request::parseBody() {
   size_t headerSize = reqLen - this->getHeaderContentLength();
   _body = new char[this->getHeaderContentLength()];
   memcpy(_body, _rawData + headerSize, this->getHeaderContentLength());
-  // _body = bodyBuffer;
-  // _body = _rawData.substr(_rawData.find(CRLF) + 4);
 }
 
 void Request::validate() {
