@@ -198,7 +198,7 @@ TEST(ParserTest, ShouldIdentifyAValidConfigFileWithMultipleLocationsBlock) {
   buffer += "autoindex off # desabilita a listagem de arquivos\n";
   buffer += "try_files $uri $uri /index.html; \n";
   buffer += "}\n";
-  buffer += "}\n";
+  buffer += " \t}\n";
 
   std::stringstream ss(buffer);
   std::string line;

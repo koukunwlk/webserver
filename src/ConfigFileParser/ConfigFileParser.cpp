@@ -38,7 +38,7 @@ void Block::isValidBlockDefinition(string name) {
 void Parser::parseLine(string line) {
   static Block* block;
   static Block* childBlock;
-
+  line = str_trim(line);
   if (line.find("{") != string::npos) {
     if (static_cast<void*>(block) != NULL) {
       childBlock = Parser::createBlock(line);
@@ -53,7 +53,7 @@ void Parser::parseLine(string line) {
       this->_blocks.push_back(*block);
       block = NULL;
     }
-  } else {
+  } else if (line.size() != 0) {
     istringstream iss(line);
     vector<string> tokens;
     for (string s; iss >> s;) {
@@ -100,27 +100,13 @@ void createServer(Block server) {
   struct ServerConfig serverConfig;
   Property currentProperty = server.getNextProperty();
   vector<Block> childBlocks = server.getChildBlocks();
+
   while (currentProperty.first.size() != 0) {
     if (currentProperty.first.compare("port") == 0) {
       std::istringstream(currentProperty.first) >> serverConfig.port;
     }
     if (currentProperty.first.compare("server_name") == 0) {
       serverConfig.server_names = currentProperty.second;
-    }
-
-    if (currentProperty.first.compare("root") == 0) {
-      serverConfig.root = currentProperty.second[0];
-    }
-
-    if (currentProperty.first.compare("index") == 0) {
-      serverConfig.index = currentProperty.second;
-    }
-
-    if (currentProperty.first.compare("error_page") == 0) {
-      Error_page errorPage;
-      std::istringstream(currentProperty.second[0]) >> errorPage.code;
-      errorPage.path = currentProperty.second[1];
-      serverConfig.error_page.push_back(errorPage);
     }
 
     if (currentProperty.first.compare("client_max_body_size") == 0) {
@@ -162,7 +148,7 @@ Location createLocation(Block location) {
     }
 
     if (currentProperty.first.compare("error_page") == 0) {
-      Error_page errorPage;
+      ErrorPage errorPage;
       std::istringstream(currentProperty.second[0]) >> errorPage.code;
       errorPage.path = currentProperty.second[1];
       locationConfig.error_page.push_back(errorPage);
@@ -175,4 +161,21 @@ Location createLocation(Block location) {
     currentProperty = location.getNextProperty();
   }
   return locationConfig;
+}
+
+vector<ServerConfig> Parser::getServerConfigs() { return this->_serverConfigs; }
+
+std::string str_trim(const std::string& str) {
+  std::string result = str;
+  size_t start = result.find_first_not_of(" \t\n\r");
+  if (start != std::string::npos) {
+    result = result.substr(start);
+  }
+
+  size_t end = result.find_last_not_of(" \t\n\r");
+  if (end != std::string::npos) {
+    result = result.substr(0, end + 1);
+  }
+
+  return result;
 }
