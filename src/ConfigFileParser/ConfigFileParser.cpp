@@ -132,7 +132,6 @@ void Parser::createServer(Block server) {
       createLocation(server);
     }
   }
-  std::cout << "childBlocks.size(): " << childBlocks.size() << std::endl;
   if (childBlocks.size() != 0) {
     for (size_t i = 0; i < childBlocks.size(); i++) {
       serverConfig.locations.push_back(createLocation(childBlocks[i]));

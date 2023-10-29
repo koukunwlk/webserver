@@ -92,3 +92,4 @@ class Request {
 };
 
 std::ostream &operator<<(std::ostream &o, Request const &i);
+bool isFile(std::string contentType);

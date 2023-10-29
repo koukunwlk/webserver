@@ -1,14 +1,28 @@
 #include "Server/Server.hpp"
 
 // Constructors
-Server::Server() { setupServer(1); }
+Server::Server() {  }
+
+Server::Server(std::vector<ServerConfig> config) { createThreadPool(config); }
 
 // Destructor
 Server::~Server() { closeServer(); }
 
 // Methods
-int Server::setupServer(int nServers) {
-  if (createThreadPool(nServers)) return EXIT_FAILURE;
+int Server::createThreadPool(std::vector<ServerConfig> config) {
+  int serverQuantity = config.size();
+  pthread_t threads[serverQuantity];
+
+  for (int i = 0; i < serverQuantity; ++i) {
+    ServerConfig currentServer = config[i];
+    this->_tArgs.currentServer = currentServer;
+    if (pthread_create(&threads[i], NULL, thread, &this->_tArgs) == -1) {
+      std::cerr << "Error creating thread" << std::endl;
+      return EXIT_FAILURE;
+    }
+    sleep(1);
+  }
+
   return EXIT_SUCCESS;
 }
 
@@ -39,23 +53,6 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
   return fd;
 }
 
-int Server::createThreadPool(int serverQuantity) {
-  std::string portArray[serverQuantity];
-  portArray[0] = "5000";
-
-  pthread_t threads[serverQuantity];
-
-  for (int i = 0; i < serverQuantity; ++i) {
-    this->_tArgs._port = portArray[i];
-    if (pthread_create(&threads[i], NULL, thread, &this->_tArgs) == -1) {
-      std::cerr << "Error creating thread" << std::endl;
-      return EXIT_FAILURE;
-    }
-    sleep(1);
-  }
-
-  return EXIT_SUCCESS;
-}
 
 void *Server::thread(void *args) {
   int epollFd;
@@ -65,7 +62,7 @@ void *Server::thread(void *args) {
     perror("Error creating epoll instance");
   }
 
-  int port = std::stoi(((ThreadArgs *)args)->_port);
+  int port = ((ThreadArgs *)args)->currentServer.port;
 
   struct epoll_event ev;
 
@@ -74,6 +71,8 @@ void *Server::thread(void *args) {
   listenAddr.sin_family = AF_INET;
   listenAddr.sin_port = htons(port);
   listenAddr.sin_addr.s_addr = inet_addr("0.0.0.0");
+
+
 
   listenFd = putFdToListen(listenAddr);
   addListenFdToEpoll(listenFd, epollFd, epEvent);
@@ -103,6 +102,7 @@ void *Server::thread(void *args) {
 
         makeAFileDescriptorNonBlocking(clientFd);
         ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+        ev.data.fd = clientFd;
 
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
           perror("epoll_ctl error ");
@@ -123,6 +123,7 @@ void *Server::thread(void *args) {
             break;
           std::string str(buffer);
           concatenatedData += str;
+          bzero(buffer, sizeof(buffer));
         }
         Request request(concatenatedData.c_str());
 
@@ -139,7 +140,8 @@ void *Server::thread(void *args) {
         responseStr << response;
 
         write(clientFd, responseStr.str().c_str(), responseStr.str().length());
-
+         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
+            perror("Error while delete clientFd from Epol");
         close(clientFd);
       }
     }
