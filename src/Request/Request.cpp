@@ -5,6 +5,7 @@
 */
 
 Request::Request(const char* rawData) : _rawData(rawData) {
+  _header.contentLength = 0;
   parseRequestData();
 }
 
@@ -149,6 +150,7 @@ void Request::validateContentLength() {
 
 void Request::validateBody() {
   size_t contentLength = static_cast<size_t>(this->getHeaderContentLength());
+  std::cout << contentLength << std::endl;
 
   if (contentLength == 0) {
     return;

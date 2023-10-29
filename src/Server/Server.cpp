@@ -102,6 +102,7 @@ void *Server::thread(void *args) {
 
         makeAFileDescriptorNonBlocking(clientFd);
         ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+        ev.data.fd = clientFd;
 
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
           perror("epoll_ctl error ");
@@ -139,8 +140,8 @@ void *Server::thread(void *args) {
         responseStr << response;
 
         write(clientFd, responseStr.str().c_str(), responseStr.str().length());
-        //  if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
-        //     perror("Error while delete clientFd from Epol");
+         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
+            perror("Error while delete clientFd from Epol");
         close(clientFd);
       }
     }
