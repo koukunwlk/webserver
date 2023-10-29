@@ -122,6 +122,7 @@ void *Server::thread(void *args) {
             break;
           std::string str(buffer);
           concatenatedData += str;
+          bzero(buffer, sizeof(buffer));
         }
         Request request(concatenatedData.c_str());
 
