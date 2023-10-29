@@ -21,24 +21,23 @@
 
 typedef struct ThreadArgs {
   int _epollFd;
-  std::string _port;
   struct epoll_event *_epEvent;
-
+  ServerConfig currentServer;
 } ThreadArgs;
 
 class Server {
  public:
   // Constructors
   Server();
+  Server(std::vector<ServerConfig> config);
   // Destructor
   ~Server();
 
   // Methods
-  int setupServer(int nServers);
   void fillThreadArgsStruct();
   void fillAddrStruct();
   int createEpollInstance();
-  int createThreadPool(int serverQuantity);
+  int createThreadPool(std::vector<ServerConfig> config);
   static void *thread(void *args);
   static void *thread1(void *args);
   static int addListenFdToEpoll(int fd, int epollFd,
