@@ -43,6 +43,7 @@ class Block {
   std::string getName();
   std::vector<Block> getChildBlocks();
   Property getNextProperty();
+  std::vector<Property> getProperties();
 
   void addChildBlock(Block block);
   static void isValidBlockDefinition(std::string line);
@@ -65,14 +66,16 @@ class Parser {
   std::vector<Block> getBlocks();
   std::vector<ServerConfig> getServerConfigs();
   void populateServerConfigs();
+  void setServerConfig(ServerConfig serverConfigs);
 
  private:
   std::vector<Block> _blocks;
   std::vector<ServerConfig> _serverConfigs;
+
+  Location createLocation(Block location);
+  void createServer(Block server);
 };
 
-Location createLocation(Block location);
-void createServer(Block server);
 std::string str_trim(const std::string& str);
 std::string removeComments(std::string line);
 
