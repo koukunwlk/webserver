@@ -5,10 +5,17 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
+#include "ConfigFileParser/ConfigFileParser.hpp"
 #include "WebServerException/WebServerException.hpp"
+#include "webserver.hpp"
 
 #define CRLF "\r\n\r\n"
+#define VALID_REQUEST 0
+#define INVALID_HEADER 1
+#define INVALID_METHOD 2
+#define INVALID_LOCATION 3
 
 typedef struct RequestHeader {
   std::string rawData;
@@ -28,6 +35,7 @@ typedef struct RequestHeader {
 
 class Request {
  public:
+  Request(const char *, ServerConfig);
   Request(const char *);
   ~Request();
 
@@ -50,8 +58,8 @@ class Request {
   void setServerRoot(std::string);
   std::string getRedirect() const;
   void setRedirect(std::string);
-  std::string getIndex() const;
-  void setIndex(std::string);
+  std::vector<std::string> getIndex() const;
+  void setIndex(std::vector<std::string>);
   bool getAutoIndex() const;
   void setAutoIndex(std::string);
 
@@ -61,9 +69,10 @@ class Request {
   char *_body;
 
   // Propriedades do ServerConfig
-  std::string _serverRoot;
+  std::string _root;
   std::string _redirect;
-  std::string _index;
+  std::vector<std::string> _index;
+  std::vector<ErrorPage> _errorPages;
   bool _autoIndex;
 
   int _validationStatus;

@@ -21,7 +21,7 @@ struct Location {
   std::string extension;
 
   std::string root;
-  std::string index;
+  std::vector<std::string> index;
   bool autoindex;
   std::string redirect;
   std::vector<ErrorPage> error_page;

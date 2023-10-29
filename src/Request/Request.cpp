@@ -8,6 +8,37 @@ Request::Request(const char* rawData) : _rawData(rawData) {
   parseRequestData();
 }
 
+Request::Request(const char* rawData, ServerConfig server) : _rawData(rawData) {
+  std::istringstream iss(rawData);
+  std::string requestMethod;
+  std::string requestTarget;
+  bool hasMatchingLocation = false;
+  Location location;
+
+  iss >> requestMethod;
+  iss >> requestTarget;
+
+  for (size_t i = 0; i < server.locations.size(); i++) {
+    location = server.locations[i];
+    if (std::find(location.methods.begin(), location.methods.end(),
+                  requestMethod) != location.methods.end() &&
+        location.url == requestTarget) {
+      this->_autoIndex = location.autoindex;
+      this->_root = location.root;
+      this->_redirect = location.redirect;
+      this->_index = location.index;
+      this->_errorPages = location.error_page;
+      hasMatchingLocation = true;
+      this->_validationStatus = VALID_REQUEST;
+      break;
+    }
+  }
+  if (!hasMatchingLocation) {
+    this->_validationStatus = INVALID_LOCATION;
+  }
+  parseRequestData();
+}
+
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -191,17 +222,19 @@ int Request::setValidationStatus(int status) {
   return _validationStatus = status;
 }
 
-std::string Request::getServerRoot() const { return _serverRoot; }
+std::string Request::getServerRoot() const { return _root; }
 
-void Request::setServerRoot(std::string root) { _serverRoot = root; }
+void Request::setServerRoot(std::string root) { _root = root; }
 
 std::string Request::getRedirect() const { return _redirect; }
 
 void Request::setRedirect(std::string location) { _redirect = location; }
 
-std::string Request::getIndex() const { return _index; }
+std::vector<std::string> Request::getIndex() const { return _index; }
 
-void Request::setIndex(std::string indexFile) { _index = indexFile; }
+void Request::setIndex(std::vector<std::string> indexFile) {
+  _index = indexFile;
+}
 
 bool Request::getAutoIndex() const { return _autoIndex; }
 

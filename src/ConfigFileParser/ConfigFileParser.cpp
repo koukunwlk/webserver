@@ -160,7 +160,7 @@ Location Parser::createLocation(Block location) {
     }
 
     if (currentProperty.first.compare("index") == 0) {
-      locationConfig.index = currentProperty.second[0];
+      locationConfig.index = currentProperty.second;
     }
 
     if (currentProperty.first.compare("error_page") == 0) {
@@ -172,6 +172,14 @@ Location Parser::createLocation(Block location) {
 
     if (currentProperty.first.compare("allow") == 0) {
       locationConfig.methods = currentProperty.second;
+    }
+
+    if (currentProperty.first.compare("redirect") == 0) {
+      locationConfig.redirect = currentProperty.second[0];
+    }
+
+    if (currentProperty.first.compare("autoindex") == 0) {
+      locationConfig.autoindex = currentProperty.second[0].compare("on") == 0;
     }
   }
   return locationConfig;
