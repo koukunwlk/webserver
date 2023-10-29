@@ -6,8 +6,9 @@ int main(int argc, char **argv) {
   (void)argv;
   Server server = Server();
 
-  if (server.setupServer() == EXIT_FAILURE)
-    return 1;
+  while (1) {
+
+  }
 
   return 1;
 }

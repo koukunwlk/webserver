@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "Request/Request.hpp"
 #include "WebServerException/HostingException.hpp"
@@ -20,20 +21,11 @@
 #define PORT 5000
 
 typedef struct ThreadArgs {
-  int epollFd;
-  int listenFd;
+  int _epollFd;
+  std::string _port;
+  struct epoll_event *_epEvent;
+
 } ThreadArgs;
-
-typedef enum RequestStatus {
-    Reading,
-    Writing,
-    Ended
-} RequestStatus;
-
-typedef struct requestInfo {
-  int fd;
-  RequestStatus status;
-} RequestInfo;
 
 class Server {
  public:
@@ -43,26 +35,24 @@ class Server {
   ~Server();
 
   // Methods
-  int createSocketConnection();
-  int makeAPortOnFileDescriptorReusable();
-  int createThreadPool();
+  int setupServer(int nServers);
   void fillThreadArgsStruct();
-  static void *thread(void *args);
-  int makeAFileDescriptorNonBlocking();
-  void closeServer();
   void fillAddrStruct();
-  int setupServer();
-  int bindSocket();
-  int putSocketToListen();
   int createEpollInstance();
-  int addListenFdToEpoll();
+  int createThreadPool(int serverQuantity);
+  static void *thread(void *args);
+  static void *thread1(void *args);
+  static int addListenFdToEpoll(int fd, int epollFd,
+                                struct epoll_event *epEvent);
+  void closeServer();
+  static int makeAFileDescriptorNonBlocking(int fd);
+  static int makeAPortOnFileDescriptorReusable(int fd);
+  static int putFdToListen(struct sockaddr_in listenAddress);
 
  private:
-  pthread_t threads[2];
+  std::vector<pthread_t> _threads;
   ThreadArgs _tArgs;
-  int _listenFd;
   int _epollFd;
-  struct sockaddr_in _listenAddress;
   struct epoll_event _epEvent;
 };
 
