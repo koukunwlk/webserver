@@ -5,6 +5,7 @@
 */
 
 Request::Request(const char* rawData) : _rawData(rawData) {
+  std::cout << _rawData << std::endl;
   _header.contentLength = 0;
   parseRequestData();
 }
@@ -111,7 +112,7 @@ std::string Request::getPropertyValueFrom(std::string line) {
 }
 
 void Request::parseBody() {
-  if (this->getHeaderContentLength() < 1) {
+  if (this->getHeaderContentLength() < 1 || isFile(this->getHeaderContentType())) {
     return;
   }
   std::string rawData(_rawData);
@@ -149,10 +150,9 @@ void Request::validateContentLength() {
 }
 
 void Request::validateBody() {
-  size_t contentLength = static_cast<size_t>(this->getHeaderContentLength());
-  std::cout << contentLength << std::endl;
-
-  if (contentLength == 0) {
+  size_t contentLength = this->getHeaderContentLength();
+  std::string contentType = this->getHeaderContentType();
+  if (contentLength == 0 || isFile(contentType)) {
     return;
   }
   size_t reqLen = strlen(_rawData);
@@ -209,6 +209,19 @@ bool Request::getAutoIndex() const { return _autoIndex; }
 
 void Request::setAutoIndex(std::string autoIndex) {
   _autoIndex = (0 == autoIndex.compare("on"));
+}
+
+/*
+** --------------------------------- STATIC ---------------------------------
+*/
+
+bool isFile(std::string contentType) {
+  if (!(contentType.find("multipart/form-data") == std::string::npos)) {
+    return true;
+  } else if (!(contentType.find("application") == std::string::npos)) {
+    return true;
+  }
+  return false;
 }
 
 /* ************************************************************************** */
