@@ -1,7 +1,7 @@
 #include "Server/Server.hpp"
 
 // Constructors
-Server::Server() { setupServer(4); }
+Server::Server() { setupServer(1); }
 
 // Destructor
 Server::~Server() { closeServer(); }
@@ -42,9 +42,6 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
 int Server::createThreadPool(int serverQuantity) {
   std::string portArray[serverQuantity];
   portArray[0] = "5000";
-  portArray[1] = "8000";
-  portArray[2] = "6000";
-  portArray[3] = "2023";
 
   pthread_t threads[serverQuantity];
 
@@ -61,7 +58,6 @@ int Server::createThreadPool(int serverQuantity) {
 }
 
 void *Server::thread(void *args) {
-
   int epollFd;
   struct epoll_event *epEvent =
       (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
@@ -112,7 +108,6 @@ void *Server::thread(void *args) {
           perror("epoll_ctl error ");
         }
       } else {
-
         int bytesReceived;
         char buffer[1024];
         std::string concatenatedData;
@@ -130,27 +125,21 @@ void *Server::thread(void *args) {
           concatenatedData += str;
         }
         Request request(concatenatedData.c_str());
-        std::cout << std::endl;
-        std::cout << request.getRawData() << std::endl;
 
-        // ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
-        // if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
-        //   perror("epoll_ctl error ");
-        //   continue;
-        // }
+        ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
+        if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
+          perror("epoll_ctl error ");
+        }
 
-        //     std::cout << concatenatedData << std::endl;
+        request.setServerRoot("www");
+        Handler handle(&request);
 
-        //     info->status = Writing;
-        //   }
+        Response response = handle.getResponse();
+        std::stringstream responseStr;
+        responseStr << response;
 
-        //   if (info->status == Writing) {
-        //     std::string response = "HTTP/1.1 200 OK\r\nteste";
-        //     // std::cout << response << std::endl;
-        //     write(clientFd, response.c_str(), response.length());
-        //     info->status = Ended;
-        //   }
-        //   if (info->status == Ended) {
+        write(clientFd, responseStr.str().c_str(), responseStr.str().length());
+
         close(clientFd);
       }
     }

@@ -16,6 +16,9 @@ Response::Response(int statusCode, std::string contentType,
   _body = body;
 }
 
+Response::Response(const Response &copy) {
+  *this = copy;
+}
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
