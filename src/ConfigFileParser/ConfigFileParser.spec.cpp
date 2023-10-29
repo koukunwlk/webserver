@@ -229,7 +229,7 @@ TEST(ParserTest, ShouldIdentifyAValidConfigFileWithMultipleLocationsBlock) {
 TEST(ParserTest, ShouldIdentifyAValidConfigFileWithMultipleServerBlocks) {
   Parser* p = new Parser();
   std::string buffer;
-  buffer += "server {\n";
+  buffer += "server { # isso e um server\n";
   buffer += "server_name xpto.com abcde.com\n";
   buffer += "listen 80\n";
   buffer += "error_page 404 /404.html\n";

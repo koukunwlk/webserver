@@ -74,6 +74,7 @@ class Parser {
 Location createLocation(Block location);
 void createServer(Block server);
 std::string str_trim(const std::string& str);
+std::string removeComments(std::string line);
 
 /*
   * 1. string no formato      "GET /teste.php HTTP/1.1\r\n"

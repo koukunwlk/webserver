@@ -39,6 +39,7 @@ void Parser::parseLine(string line) {
   static Block* block;
   static Block* childBlock;
   line = str_trim(line);
+  line = removeComments(line);
   if (line.find("{") != string::npos) {
     if (static_cast<void*>(block) != NULL) {
       childBlock = Parser::createBlock(line);
@@ -178,4 +179,12 @@ std::string str_trim(const std::string& str) {
   }
 
   return result;
+}
+
+std::string removeComments(std::string line) {
+  size_t comment = line.find("#");
+  if (comment != std::string::npos) {
+    line = line.substr(0, comment);
+  }
+  return line;
 }
