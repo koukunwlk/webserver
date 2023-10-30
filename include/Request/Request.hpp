@@ -60,6 +60,8 @@ class Request {
   void setRedirect(std::string);
   std::vector<std::string> getIndex() const;
   void setIndex(std::vector<std::string>);
+  std::vector<ErrorPage> getErrorPages() const;
+  void setErrorPages(std::vector<ErrorPage>);
   bool getAutoIndex() const;
   void setAutoIndex(std::string);
 

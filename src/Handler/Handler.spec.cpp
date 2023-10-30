@@ -166,7 +166,9 @@ TEST(HandlerClass, ValidateFolderIndexFile) {
   Request req(bufferMock);
   req.setValidationStatus(VALID_REQUEST);
   req.setServerRoot("www");
-  req.setIndex("index.html");
+  std::vector<std::string> vIndex;
+  vIndex.push_back("index.html");
+  req.setIndex(vIndex);
   Handler handler(&req);
 
   EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_OK);
@@ -184,12 +186,15 @@ TEST(HandlerClass, ValidateFolderInvalidIndexFileAutoIndexOn) {
       "404.html\n"
       "teste.php\n"
       "index.html\n"
+      "403.html\n"
       "400.html\n";
 
   Request req(bufferMock);
   req.setValidationStatus(VALID_REQUEST);
   req.setServerRoot("www");
-  req.setIndex("index.htm");
+  std::vector<std::string> vIndex;
+  vIndex.push_back("index.htm");
+  req.setIndex(vIndex);
   req.setAutoIndex("on");
   Handler handler(&req);
 
@@ -209,7 +214,9 @@ TEST(HandlerClass, ValidateFolderInvalidIndexFileAutoIndexOff) {
   Request req(bufferMock);
   req.setValidationStatus(VALID_REQUEST);
   req.setServerRoot("www");
-  req.setIndex("index.htm");
+  std::vector<std::string> vIndex;
+  vIndex.push_back("index.htm");
+  req.setIndex(vIndex);
   req.setAutoIndex("off");
   Handler handler(&req);
 
@@ -227,6 +234,31 @@ TEST(HandlerClass, ValidateInvalidFolder) {
   const char expected[] = "<h1>Error 404</h1>";
 
   Request req(bufferMock);
+  req.setValidationStatus(VALID_REQUEST);
+  req.setServerRoot("www");
+  req.setAutoIndex("off");
+  Handler handler(&req);
+
+  EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_NOT_FOUND);
+  EXPECT_EQ(handler.getResponse().getBody(), expected);
+}
+
+TEST(HandlerClass, ValidateErroPage) {
+  const char bufferMock[] =
+      "GET /deno HTTP/1.1\r\n"
+      "Host: localhost:3000\n"
+      "Content-Type: text/plain\n"
+      "Content-Length: 0\r\n\r\n";
+
+  const char expected[] = "<h1>Error 403</h1>";
+
+  Request req(bufferMock);
+  ErrorPage errPage;
+  errPage.code = 404;
+  errPage.path = "/403.html";
+  std::vector<ErrorPage> vErrPage;
+  vErrPage.push_back(errPage);
+  req.setErrorPages(vErrPage);
   req.setValidationStatus(VALID_REQUEST);
   req.setServerRoot("www");
   req.setAutoIndex("off");

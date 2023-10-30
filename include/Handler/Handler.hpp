@@ -44,3 +44,4 @@ int getFolder(Request &req, std::string &page, std::string root,
               std::string filepath);
 int listFolderContent(std::string &page, std::string fullpath);
 bool endsWith(std::string fullString, std::string ending);
+std::string getPhrase(int code);

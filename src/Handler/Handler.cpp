@@ -26,27 +26,23 @@ Handler::~Handler() {}
 
 void Handler::setErrorPage(int code) {
   _res.setStatusCode(code);
-  switch (code) {
-    case HTTP_BAD_REQUEST:
-      _res.setReasonPhrase("Bad Request");
-      break;
-    case HTTP_FORBIDDEN:
-      _res.setReasonPhrase("Forbidden");
-      break;
-    case HTTP_NOT_FOUND:
-      _res.setReasonPhrase("Not Found");
-      break;
-    default:
-      _res.setReasonPhrase("Server Internal Error");
-      _res.setStatusCode(500);
-      break;
-  }
-  // TODO: pegar errorfile do server que respondeu a request
+  _res.setReasonPhrase(getPhrase(code));
+
+  std::vector<ErrorPage> errorPages = _req->getErrorPages();
+  std::string rootFolder = _req->getServerRoot();
+  std::string page;
+
   std::stringstream ss;
   ss << "/" << code << ".html";
   std::string errorFile = ss.str();
-  std::string page;
   getHtmlPage(page, "www", errorFile);
+
+  for (int i = 0; i < (int)errorPages.size(); i++) {
+    if (errorPages[i].code == code) {
+      page.clear();
+      getHtmlPage(page, rootFolder, errorPages[i].path);
+    }
+  }
   _res.setBody(page);
 }
 
@@ -228,6 +224,23 @@ bool endsWith(std::string fullString, std::string ending) {
   } else {
     return false;
   }
+}
+
+std::string getPhrase(int code) {
+  std::string phrase;
+  switch (code) {
+    case HTTP_BAD_REQUEST:
+      phrase = "Bad Request";
+      break;
+    case HTTP_FORBIDDEN:
+      phrase = "Forbidden";
+      break;
+    case HTTP_NOT_FOUND:
+    default:
+      phrase = "Not Found";
+      break;
+  }
+  return phrase;
 }
 
 /* ************************************************************************** */

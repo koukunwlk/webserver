@@ -5,7 +5,6 @@
 */
 
 Request::Request(const char* rawData) : _rawData(rawData) {
-  std::cout << _rawData << std::endl;
   _header.contentLength = 0;
   parseRequestData();
 }
@@ -236,6 +235,12 @@ std::vector<std::string> Request::getIndex() const { return _index; }
 
 void Request::setIndex(std::vector<std::string> indexFile) {
   _index = indexFile;
+}
+
+std::vector<ErrorPage> Request::getErrorPages() const { return _errorPages; }
+
+void Request::setErrorPages(std::vector<ErrorPage> errorPages) {
+  _errorPages = errorPages;
 }
 
 bool Request::getAutoIndex() const { return _autoIndex; }
