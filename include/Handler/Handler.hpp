@@ -16,6 +16,8 @@
 #define INVALID_HEADER 1
 #define INVALID_METHOD 2
 
+class Request;
+
 class Handler {
  public:
   Handler();

@@ -190,10 +190,14 @@ int getPhpPage(std::string &page, std::string root, std::string filepath) {
 
 int getFolder(Request &req, std::string &page, std::string rootFolder,
               std::string filePath) {
-  std::string fullpath = rootFolder + filePath + req.getIndex();
+  std::string fullpath;
+  std::vector<std::string> indexes = req.getIndex();
 
-  if (access(fullpath.c_str(), F_OK) == 0) {
-    return getHtmlPage(page, rootFolder + filePath, req.getIndex());
+  for (int i = 0; i < (int)indexes.size(); i++) {
+    fullpath = rootFolder + filePath + indexes[i];
+    if (access(fullpath.c_str(), F_OK) == 0) {
+      return getHtmlPage(page, rootFolder + filePath, indexes[i]);
+    }
   }
 
   if (req.getAutoIndex() == true) {
