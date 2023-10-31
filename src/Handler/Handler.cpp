@@ -96,6 +96,12 @@ int Handler::handleGET() {
 }
 
 int Handler::handlePOST() {
+  std::string contentType = _req->getHeaderContentType();
+  size_t pos = contentType.find("boundary=");
+  std::string boundary =
+      contentType.substr(pos + 9, contentType.length() - pos - 9);
+  std::cout << boundary << std::endl;
+
   _res.setStatusCode(201);
   _res.setReasonPhrase("CREATED");
   return 0;
