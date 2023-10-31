@@ -5,22 +5,10 @@
 */
 
 Handler::Handler(Request *req) : _req(req) {
-  switch(_req->getValidationStatus()) {
-    case VALID_REQUEST:
-      this->handleRequest();
-      break;
-    case INVALID_HEADER:
-      this->handleError(403);
-      break;
-    case INVALID_LOCATION:
-      this->handleError(404);
-      break;
-    case INVALID_METHOD:
-      this->handleError(405);
-      break;
-    default:
-      this->handleError(500);
-      break;
+  if (_req->getValidationStatus() == VALID_REQUEST) {
+    this->handleRequest();
+  } else {
+    this->handleError(_req->getValidationStatus());
   }
 }
 
@@ -58,8 +46,21 @@ void Handler::setErrorPage(int code) {
   _res.setBody(page);
 }
 
-int Handler::handleError(int code) {
-  setErrorPage(code);
+int Handler::handleError(int status) {
+  switch (status) {
+    case INVALID_HEADER:
+      setErrorPage(403);
+      break;
+    case INVALID_LOCATION:
+      setErrorPage(404);
+      break;
+    case INVALID_METHOD:
+      setErrorPage(405);
+      break;
+    default:
+      setErrorPage(500);
+      break;
+  }
   return 0;
 }
 
