@@ -25,14 +25,14 @@ TEST(HandlerClass, ValidationStatusInvalidHeader) {
       "Content-Type: text/plain\n"
       "Content-Length: 0\r\n\r\n";
 
-  const char expected[] = "<h1>Error 400</h1>";
+  const char expected[] = "<h1>Error 403</h1>";
 
   Request req(bufferMock);
   req.setValidationStatus(INVALID_HEADER);
   Handler handler(&req);
 
-  EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_BAD_REQUEST);
-  EXPECT_EQ(handler.getResponse().getReasonPhrase(), "Bad Request");
+  EXPECT_EQ(handler.getResponse().getStatusCode(), HTTP_FORBIDDEN);
+  EXPECT_EQ(handler.getResponse().getReasonPhrase(), "Forbidden");
   EXPECT_EQ(handler.getResponse().getBody(), expected);
 }
 
@@ -187,7 +187,9 @@ TEST(HandlerClass, ValidateFolderInvalidIndexFileAutoIndexOn) {
       "teste.php\n"
       "index.html\n"
       "403.html\n"
-      "400.html\n";
+      "400.html\n"
+      "500.html\n"
+      "405.html\n";
 
   Request req(bufferMock);
   req.setValidationStatus(VALID_REQUEST);

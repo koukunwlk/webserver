@@ -16,8 +16,6 @@
 #include "webserver.hpp"
 
 #define MAX_EVENTS 10
-#define MAX_HEADER 8192
-#define PORT 5000
 
 typedef struct ThreadArgs {
   int _epollFd;

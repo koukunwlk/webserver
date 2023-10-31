@@ -38,7 +38,7 @@ $(NAME): $(OBJ) $(INCLUDE)
 	@echo -n "Compiling $(NAME)... "
 	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 	@echo Done!
-	@echo run ./webserver
+	@echo run ./webserver <config_file.conf>
 
 $(OBJ_D)/%.o : $(SRC_D)/%.cpp
 	@echo -n "Compiling $@... "

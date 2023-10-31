@@ -12,10 +12,6 @@
 #include "Response/Response.hpp"
 #include "WebServerException/WebServerException.hpp"
 
-#define VALID_REQUEST 0
-#define INVALID_HEADER 1
-#define INVALID_METHOD 2
-
 class Request;
 
 class Handler {
@@ -31,7 +27,7 @@ class Handler {
   int handleGET();
   int handlePOST();
   int handleDELETE();
-  int handleError();
+  int handleError(int code);
 
  private:
   Request *_req;

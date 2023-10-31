@@ -1,7 +1,7 @@
 #include "Server/Server.hpp"
 
 // Constructors
-Server::Server() {  }
+Server::Server() {}
 
 Server::Server(std::vector<ServerConfig> config) { createThreadPool(config); }
 
@@ -50,9 +50,10 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
     return -1;
   }
 
+  std::cout << "Listening on port: " << ntohs(listenAddress.sin_port) << std::endl;
+
   return fd;
 }
-
 
 void *Server::thread(void *args) {
   int epollFd;
@@ -71,8 +72,6 @@ void *Server::thread(void *args) {
   listenAddr.sin_family = AF_INET;
   listenAddr.sin_port = htons(port);
   listenAddr.sin_addr.s_addr = inet_addr("0.0.0.0");
-
-
 
   listenFd = putFdToListen(listenAddr);
   addListenFdToEpoll(listenFd, epollFd, epEvent);
@@ -140,8 +139,8 @@ void *Server::thread(void *args) {
         responseStr << response;
 
         write(clientFd, responseStr.str().c_str(), responseStr.str().length());
-         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
-            perror("Error while delete clientFd from Epol");
+        if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
+          perror("Error while delete clientFd from Epol");
         close(clientFd);
       }
     }

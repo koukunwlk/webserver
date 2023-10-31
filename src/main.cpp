@@ -2,7 +2,11 @@
 #include "webserver.hpp"
 
 int main(int argc, char** argv) {
-  if (argc < 2) return EXIT_FAILURE;
+  if (argc < 2){
+    std::cout << "Usage:\t./webserver <config_file.conf>\n";
+    return EXIT_FAILURE;
+  }
+  std::cout << "Starting Webserver\n";
 
   std::string content;
   std::ifstream configFile(argv[1]);
