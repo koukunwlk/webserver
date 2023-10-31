@@ -33,6 +33,11 @@ Request::Request(const char* rawData, ServerConfig server) : _rawData(rawData) {
       this->_validationStatus = VALID_REQUEST;
       break;
     }
+    if (location.url == requestTarget &&
+        std::find(location.methods.begin(), location.methods.end(),
+                  requestMethod) == location.methods.end()) {
+      this->_validationStatus = INVALID_METHOD;
+    }
   }
   if (!hasMatchingLocation) {
     this->_validationStatus = INVALID_LOCATION;
@@ -142,7 +147,8 @@ std::string Request::getPropertyValueFrom(std::string line) {
 }
 
 void Request::parseBody() {
-  if (this->getHeaderContentLength() < 1 || isFile(this->getHeaderContentType())) {
+  if (this->getHeaderContentLength() < 1 ||
+      isFile(this->getHeaderContentType())) {
     return;
   }
   std::string rawData(_rawData);
