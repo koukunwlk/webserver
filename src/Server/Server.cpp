@@ -125,7 +125,7 @@ void *Server::thread(void *args) {
           bzero(buffer, sizeof(buffer));
         }
         Request request(concatenatedData.c_str());
-        std::cout << request.getRawData() << std::endl;
+        // std::cout << request.getRawData() << std::endl;
 
         ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {

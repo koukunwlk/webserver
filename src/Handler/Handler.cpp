@@ -100,7 +100,36 @@ int Handler::handlePOST() {
   size_t pos = contentType.find("boundary=");
   std::string boundary =
       contentType.substr(pos + 9, contentType.length() - pos - 9);
+  std::cout << std::endl;
+  std::cout << "Boundary:" << std::endl;
   std::cout << boundary << std::endl;
+
+  std::string body = _req->getRawData();
+  pos = body.find("filename=");
+  body.erase(0, pos + 10);
+  std::string filename = body.substr(0, body.find("\""));
+  std::cout << std::endl;
+  std::cout << "Filename:" << std::endl;
+  std::cout << filename << std::endl;
+
+  pos = body.find("Content-Type: ");
+  body.erase(0, pos + 14);
+  std::string bodyContentType = body.substr(0, body.find("\r\n\r\n"));
+  std::cout << std::endl;
+  std::cout << "Content-Type:" << std::endl;
+  std::cout << bodyContentType << std::endl;
+
+  pos = body.find(CRLF);
+  body.erase(0, pos + 4);
+  std::string fileStream = body.substr(0, body.find(CRLF) - 1);
+  std::cout << std::endl;
+  std::cout << "File stream:" << std::endl;
+  std::cout << fileStream << std::endl;
+
+  std::ofstream write;
+  write.open(filename.c_str(), std::ios::out | std::ios::binary);
+  write.write(fileStream.c_str(), fileStream.length());
+  write.close();
 
   _res.setStatusCode(201);
   _res.setReasonPhrase("CREATED");
