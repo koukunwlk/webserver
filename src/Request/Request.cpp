@@ -4,12 +4,12 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Request::Request(const char* rawData) : _rawData(rawData) {
+Request::Request(char* rawData) : _rawData(rawData) {
   _header.contentLength = 0;
   parseRequestData();
 }
 
-Request::Request(const char* rawData, ServerConfig server) : _rawData(rawData) {
+Request::Request(char* rawData, ServerConfig server) : _rawData(rawData) {
   std::istringstream iss(rawData);
   std::string requestMethod;
   std::string requestTarget;
@@ -55,7 +55,7 @@ Request::~Request() {}
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-std::ostream& operator<<(std::ostream& o, Request const& i) {
+std::ostream& operator<<(std::ostream& o, Request &i) {
   o << i.getRawData();
   return o;
 }
@@ -205,7 +205,7 @@ void Request::validateBody() {
 
 char* Request::getBody() const { return _body; }
 
-std::string Request::getRawData() const { return _rawData; }
+char * Request::getRawData() { return _rawData; }
 
 std::string Request::getHeaderTarget() const { return _header.target; }
 

@@ -50,7 +50,8 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
     return -1;
   }
 
-  std::cout << "Listening on port: " << ntohs(listenAddress.sin_port) << std::endl;
+  std::cout << "Listening on port: " << ntohs(listenAddress.sin_port)
+            << std::endl;
 
   return fd;
 }
@@ -109,7 +110,7 @@ void *Server::thread(void *args) {
       } else {
         int bytesReceived;
         char buffer[1024];
-        std::string concatenatedData;
+        std::vector<char> requestString;
 
         while (1) {
           bytesReceived = read(clientFd, buffer, sizeof(buffer));
@@ -120,11 +121,21 @@ void *Server::thread(void *args) {
               perror("read");
           } else if (bytesReceived == 0)
             break;
-          std::string str(buffer);
-          concatenatedData += str;
-          bzero(buffer, sizeof(buffer));
+          requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
+          std::cout << "########### BUFFER ############" << std::endl;
+          std::cout << buffer << std::endl;
+          std::cout << "########### REQUESTSTRING #############" << std::endl;
+          std::cout << requestString.data() << std::endl;
+          memset(buffer, 0, sizeof(buffer));
+          // std::cout << "buffer= " << buffer << std::endl;
+          // std::cout << "buffer[0]= " << buffer[0] << std::endl;
         }
-        Request request(concatenatedData.c_str());
+
+            // std::cout << "concatenetedData = " << std::endl;
+            // std::cout << requestString.data() << std::endl;
+            // std::cout << " #####################  ######################### " << std::endl;
+
+        Request request(requestString.data());
         // std::cout << request.getRawData() << std::endl;
 
         ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
