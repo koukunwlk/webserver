@@ -4,12 +4,12 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Request::Request(char* rawData) : _rawData(rawData) {
+Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   _header.contentLength = 0;
   parseRequestData();
 }
 
-Request::Request(char* rawData, ServerConfig server) : _rawData(rawData) {
+/* Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
   std::istringstream iss(rawData);
   std::string requestMethod;
   std::string requestTarget;
@@ -43,7 +43,7 @@ Request::Request(char* rawData, ServerConfig server) : _rawData(rawData) {
     this->_validationStatus = INVALID_LOCATION;
   }
   parseRequestData();
-}
+} */
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -56,7 +56,7 @@ Request::~Request() {}
 */
 
 std::ostream& operator<<(std::ostream& o, Request &i) {
-  o << i.getRawData();
+  o << i.getCharRawData();
   return o;
 }
 
@@ -68,11 +68,11 @@ void Request::parseRequestData() {
   parseRawHeader();
   parseHeaderProperties();
   validate();
-  parseBody();
+  //parseBody();
 }
 
 void Request::parseRawHeader() {
-  std::string rawData(_rawData);
+  std::string rawData(reinterpret_cast<char*>(_rawData.data()));
   std::size_t delim = rawData.find(CRLF);
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
@@ -146,17 +146,23 @@ std::string Request::getPropertyValueFrom(std::string line) {
   return propertyValue;
 }
 
-void Request::parseBody() {
+/* void Request::parseBody() {
   if (this->getHeaderContentLength() < 1 ||
       isFile(this->getHeaderContentType())) {
     return;
   }
-  std::string rawData(_rawData);
-  size_t reqLen = strlen(_rawData);
-  size_t headerSize = reqLen - this->getHeaderContentLength();
-  _body = new char[this->getHeaderContentLength()];
-  memcpy(_body, _rawData + headerSize, this->getHeaderContentLength());
-}
+
+  std::string rawData(reinterpret_cast<char*>(_rawData.data()));
+
+  std::cout << "rawData as string=" << rawData << std::endl;
+
+  std::endl(std::cout);
+  
+  std::cout << "rawData = " << std::endl;
+  for(size_t i = 0; i< _rawData.size(); i++){
+    std::cout << _rawData[i];
+  }
+} */
 
 void Request::validate() {
   validateMethod();
@@ -191,7 +197,7 @@ void Request::validateBody() {
   if (contentLength == 0 || isFile(contentType)) {
     return;
   }
-  size_t reqLen = strlen(_rawData);
+  size_t reqLen = strlen(this->getCharRawData());
   size_t headerSize = this->getHeaderRawDate().length() + 4;
 
   if (reqLen != headerSize + contentLength) {
@@ -205,7 +211,9 @@ void Request::validateBody() {
 
 char* Request::getBody() const { return _body; }
 
-char * Request::getRawData() { return _rawData; }
+std::vector<unsigned char> Request::getRawData() { return _rawData; }
+
+char * Request::getCharRawData() { return reinterpret_cast<char*>(_rawData.data()); }
 
 std::string Request::getHeaderTarget() const { return _header.target; }
 

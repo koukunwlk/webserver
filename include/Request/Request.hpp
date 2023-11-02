@@ -35,11 +35,12 @@ typedef struct RequestHeader {
 
 class Request {
  public:
-  Request(char *, ServerConfig);
-  Request(char *);
+  //Request(char *, ServerConfig);
+  Request(std::vector<unsigned char>);
   ~Request();
 
-  char *getRawData();
+  char *getCharRawData();
+  std::vector<unsigned char> getRawData();
 
   char *getBody() const;
 
@@ -66,7 +67,7 @@ class Request {
   void setAutoIndex(std::string);
 
  private:
-  char *_rawData;
+  std::vector<unsigned char> _rawData;
   reqHeader_t _header;
   char *_body;
 

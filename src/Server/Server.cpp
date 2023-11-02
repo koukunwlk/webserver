@@ -56,6 +56,17 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
   return fd;
 }
 
+
+/* 
+    string = "0123456789"
+    buffer[4];
+
+    buffer[4] = "0123"; 
+
+                          0                 0123                        
+  requestString.insert(requestString.end(), buffer, buffer + bytesReceived)
+ */
+
 void *Server::thread(void *args) {
   int epollFd;
   struct epoll_event *epEvent =
@@ -109,9 +120,8 @@ void *Server::thread(void *args) {
         }
       } else {
         int bytesReceived;
-        char buffer[1024];
-        std::vector<char> requestString;
-
+        unsigned char buffer[1024];
+        std::vector<unsigned char> requestString;
         while (1) {
           bytesReceived = read(clientFd, buffer, sizeof(buffer));
           if (bytesReceived < 0) {
@@ -122,23 +132,24 @@ void *Server::thread(void *args) {
           } else if (bytesReceived == 0)
             break;
           requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
-          std::cout << "########### BUFFER ############" << std::endl;
+/*           std::cout << "########### BUFFER ############" << std::endl;
           std::cout << buffer << std::endl;
           std::cout << "########### REQUESTSTRING #############" << std::endl;
-          std::cout << requestString.data() << std::endl;
+          std::cout << requestString.data() << std::endl; */
           memset(buffer, 0, sizeof(buffer));
           // std::cout << "buffer= " << buffer << std::endl;
           // std::cout << "buffer[0]= " << buffer[0] << std::endl;
         }
+        /* std::cout << "concat request string" << std::endl;
+        for(size_t i = 0; i < requestString.size(); i++){
+          std::cout << requestString[i];
+        } */
 
             // std::cout << "concatenetedData = " << std::endl;
             // std::cout << requestString.data() << std::endl;
             // std::cout << " #####################  ######################### " << std::endl;
 
-        Request request(requestString.data());
-        // std::cout << request.getRawData() << std::endl;
-
-        ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
+        Request request(requestString);
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
           perror("epoll_ctl error ");
         }

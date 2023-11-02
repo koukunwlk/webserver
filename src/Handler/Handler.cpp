@@ -95,19 +95,26 @@ int Handler::handleGET() {
   return 0;
 }
 
+
 int Handler::handlePOST() {
-    // char *requestRawData = _req->getRawData();
-    // // size_t pos;
-    // char *body;
+    std::string contentType = _req->getHeaderContentType();
+    std::string requestRawData(_req->getCharRawData());
+    std::vector<unsigned char> rawData = _req->getRawData();
 
-    // body = strstr(requestRawData, CRLF);
-    // std::cout << "body content:" << body << std::endl;
+    std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
+    size_t filenameInitPos = requestRawData.find("filename=") + 10;
+    size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
+    std::string filename = requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
+    size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
+    size_t closingBoundary = rawData.size() - boundary.length() - 7;
 
 
-  // std::ofstream write;
-  // write.open(filename.c_str(), std::ios::out | std::ios::binary);
-  // write.write(fileStream.c_str(), fileStream.length());
-  // write.close();
+  std::ofstream uploadedFile;
+  uploadedFile.open(filename.c_str(), std::ios::out | std::ios::binary);
+
+  uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
+
+  uploadedFile.close();
 
   _res.setStatusCode(201);
   _res.setReasonPhrase("CREATED");
