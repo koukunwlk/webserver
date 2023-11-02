@@ -9,6 +9,83 @@ Request::Request(const char* rawData) : _rawData(rawData) {
   parseRequestData();
 }
 
+#include <algorithm>
+
+/* 
+  validar a estrutura de pastas(locationUrl com requestTarget)
+  validar se no request target tem o caminho para um arquivo (index.html, index.php)
+
+
+ */
+
+bool validateRequestLocation(Location location, std::string requestTarget){
+  /* 
+    location.url = /users
+    location.url = /
+    requestTarget = /users/notas
+
+    location  url anatomy = root = / subfolder = users/
+    requestTarget anatomy = root = / subfolder = users/ subfolder = notas
+    comparar a url com o request target, se tudo for igual, retorna true, se não, false
+    a validação da extensão so e feita apos a validação de pasta
+   */
+
+  std::vector<std::string> urlParts;
+  std::string delimiter = "/";
+  size_t pos = 0;
+  std::string token;
+  while ((pos = location.url.find(delimiter)) != std::string::npos) {
+      token = location.url.substr(0, pos);
+      urlParts.push_back(token);
+      location.url.erase(0, pos + delimiter.length());
+  }
+  urlParts.push_back(location.url);
+
+  std::vector<std::string> requestTargetParts;
+  pos = 0;
+  while ((pos = requestTarget.find(delimiter)) != std::string::npos) {
+      token = requestTarget.substr(0, pos + 1);
+      requestTargetParts.push_back(token);
+      requestTarget.erase(0, pos + delimiter.length());
+  }
+  requestTargetParts.push_back(requestTarget);
+
+  size_t i = 0;
+  size_t biggerSize = urlParts.size() > requestTargetParts.size() ? urlParts.size() : requestTargetParts.size();
+
+  std::cout << "location.url " << location.url << std::endl;
+  std::cout << "requestTarget " << requestTarget << std::endl;
+  std::cout << "urlParts.size() " << urlParts.size() << std::endl;
+  std::cout << "requestTargetParts.size() " << requestTargetParts.size() << std::endl;
+  std::cout << "biggerSize " << biggerSize << std::endl;
+  std::endl(std::cout);
+
+ //print all requestTargetParts and urlParts
+  for (size_t i = 0; i < urlParts.size(); i++) {
+    std::cout << "urlParts[" << i << "] = " << urlParts[i] << std::endl;
+  }
+  std::endl(std::cout);
+  for (size_t i = 0; i < requestTargetParts.size(); i++) {
+    std::cout << "requestTargetParts[" << i << "] = " << requestTargetParts[i] << std::endl;
+  }
+
+  while(i < biggerSize){
+    if(urlParts[i] != requestTargetParts[i]){
+      break;
+    }
+    i++;
+  }
+  if(i > 2 ) {
+    return true;
+  }
+
+  if(location.url.compare("/") == 0 && i > 1){
+    return true;
+  }
+
+  return false;
+}
+
 Request::Request(const char* rawData, ServerConfig server) : _rawData(rawData) {
   std::istringstream iss(rawData);
   std::string requestMethod;
@@ -19,11 +96,11 @@ Request::Request(const char* rawData, ServerConfig server) : _rawData(rawData) {
   iss >> requestMethod;
   iss >> requestTarget;
 
+
   for (size_t i = 0; i < server.locations.size(); i++) {
     location = server.locations[i];
-    if (std::find(location.methods.begin(), location.methods.end(),
-                  requestMethod) != location.methods.end() &&
-        location.url == requestTarget) {
+    if (validateRequestLocation(location, requestTarget) && std::find(location.methods.begin(), location.methods.end(),
+                  requestMethod) != location.methods.end()) {
       this->_autoIndex = location.autoindex;
       this->_root = location.root;
       this->_redirect = location.redirect;

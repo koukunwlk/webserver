@@ -37,11 +37,15 @@ Response &Response::operator=(const Response &assign) {
   return *this;
 }
 
+std::string Response::getLocation() const { return _header.location; }
+
+
 std::ostream &operator<<(std::ostream &os, const Response &res) {
   os << res.getProtocolVersion() << " " << res.getStatusCode() << " "
      << res.getReasonPhrase() << "\r\n"
      << "Content-Type: " << res.getContentType() << "\r\n"
      << "Content-Length: " << res.getContentLength() << "\r\n"
+     << "Location: " << res.getLocation() << "\r\n"
      << "\r\n"
      << res.getBody();
   return os;

@@ -1,5 +1,5 @@
 CC	=	c++
-CFLAGS = -Wall -Wextra -Werror -g -gdwarf-2 -lpthread
+CFLAGS = -Wall -pthread -Wextra -Werror -g -gdwarf-2 
 TFLAGS = -l gtest
 
 NAME 		= webserver
@@ -36,7 +36,7 @@ TEST_OBJ	=	$(addprefix $(TEST_D)/,$(TEST_C:.cpp=.o))
 
 $(NAME): $(OBJ) $(INCLUDE)
 	@echo -n "Compiling $(NAME)... "
-	@$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 	@echo Done!
 	@echo "run ./webserver <config_file.conf>"
 

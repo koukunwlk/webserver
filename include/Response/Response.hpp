@@ -67,6 +67,8 @@ class Response {
   std::string getBody() const;
 
   void setLocation(std::string);
+  std::string getLocation() const;
+
 
  private:
   resHeader_t _header;

@@ -57,13 +57,14 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
 
 void *Server::thread(void *args) {
   int epollFd;
+  ServerConfig server = ((ThreadArgs *)args)->currentServer;
   struct epoll_event *epEvent =
       (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
   if ((epollFd = epoll_create1(0)) == -1) {
     perror("Error creating epoll instance");
   }
 
-  int port = ((ThreadArgs *)args)->currentServer.port;
+  int port = server.port;
 
   struct epoll_event ev;
 
@@ -124,8 +125,8 @@ void *Server::thread(void *args) {
           concatenatedData += str;
           bzero(buffer, sizeof(buffer));
         }
-        Request request(concatenatedData.c_str());
-        std::cout << request.getRawData() << std::endl;
+        Request request(concatenatedData.c_str(), server);
+       // std::cout << request.getRawData() << std::endl;
 
         ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
@@ -138,6 +139,7 @@ void *Server::thread(void *args) {
         Response response = handle.getResponse();
         std::stringstream responseStr;
         responseStr << response;
+        std::cout << responseStr.str() << std::endl;
 
         write(clientFd, responseStr.str().c_str(), responseStr.str().length());
         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)

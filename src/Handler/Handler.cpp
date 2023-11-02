@@ -97,10 +97,17 @@ int Handler::handleGET() {
 
 int Handler::handlePOST() {
   std::string contentType = _req->getHeaderContentType();
+  std::string data = _req->getRawData();
   size_t pos = contentType.find("boundary=");
   std::string boundary =
       contentType.substr(pos + 9, contentType.length() - pos - 9);
   std::cout << boundary << std::endl;
+
+  data = data.substr(data.find(CRLF), data.length() - 4);
+  pos = data.find(boundary);
+  std::string filename =
+      contentType.substr(pos + 10, contentType.length() - pos - 11);
+  std::cout << "FILENAME" << filename << std::endl;
 
   _res.setStatusCode(201);
   _res.setReasonPhrase("CREATED");
