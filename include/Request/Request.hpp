@@ -35,7 +35,7 @@ typedef struct RequestHeader {
 
 class Request {
  public:
-  //Request(char *, ServerConfig);
+  Request(std::vector<unsigned char>, ServerConfig);
   Request(std::vector<unsigned char>);
   ~Request();
 
@@ -96,3 +96,4 @@ class Request {
 
 std::ostream &operator<<(std::ostream &o, Request const &i);
 bool isFile(std::string contentType);
+bool isValidRoute(std::string locationUrl, std::string requestTarget);

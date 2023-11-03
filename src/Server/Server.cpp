@@ -149,7 +149,8 @@ void *Server::thread(void *args) {
             // std::cout << requestString.data() << std::endl;
             // std::cout << " #####################  ######################### " << std::endl;
 
-        Request request(requestString);
+        Request request(requestString, ((ThreadArgs *)args)->currentServer);
+        // Request request(requestString);
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
           perror("epoll_ctl error ");
         }

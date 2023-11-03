@@ -9,8 +9,8 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   parseRequestData();
 }
 
-/* Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
-  std::istringstream iss(rawData);
+Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
+  std::istringstream iss(getCharRawData());
   std::string requestMethod;
   std::string requestTarget;
   bool hasMatchingLocation = false;
@@ -23,7 +23,7 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
     location = server.locations[i];
     if (std::find(location.methods.begin(), location.methods.end(),
                   requestMethod) != location.methods.end() &&
-        location.url == requestTarget) {
+        isValidRoute(location.url, requestTarget)) {
       this->_autoIndex = location.autoindex;
       this->_root = location.root;
       this->_redirect = location.redirect;
@@ -33,7 +33,7 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
       this->_validationStatus = VALID_REQUEST;
       break;
     }
-    if (location.url == requestTarget &&
+    if (isValidRoute(location.url, requestTarget) &&
         std::find(location.methods.begin(), location.methods.end(),
                   requestMethod) == location.methods.end()) {
       this->_validationStatus = INVALID_METHOD;
@@ -43,7 +43,7 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
     this->_validationStatus = INVALID_LOCATION;
   }
   parseRequestData();
-} */
+}
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -274,6 +274,19 @@ bool isFile(std::string contentType) {
     return true;
   }
   return false;
+}
+
+bool isValidRoute(std::string locationUrl, std::string requestTarget) {
+  for(size_t i = 0; i <= locationUrl.length(); i++){
+    if(locationUrl[i] != requestTarget[i]) {
+      if (requestTarget[i] == '/' && locationUrl[i] == '\0')
+        return true;
+      if (locationUrl.length() == 1)
+        return true;
+      return false;
+    }
+  }
+  return true;
 }
 
 /* ************************************************************************** */
