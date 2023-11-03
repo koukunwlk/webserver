@@ -56,17 +56,6 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
   return fd;
 }
 
-
-/* 
-    string = "0123456789"
-    buffer[4];
-
-    buffer[4] = "0123"; 
-
-                          0                 0123                        
-  requestString.insert(requestString.end(), buffer, buffer + bytesReceived)
- */
-
 void *Server::thread(void *args) {
   int epollFd;
   struct epoll_event *epEvent =
@@ -125,29 +114,15 @@ void *Server::thread(void *args) {
         while (1) {
           bytesReceived = read(clientFd, buffer, sizeof(buffer));
           if (bytesReceived < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            if (bytesReceived == -1 && fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
               break;
             else
               perror("read");
           } else if (bytesReceived == 0)
             break;
           requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
-/*           std::cout << "########### BUFFER ############" << std::endl;
-          std::cout << buffer << std::endl;
-          std::cout << "########### REQUESTSTRING #############" << std::endl;
-          std::cout << requestString.data() << std::endl; */
           memset(buffer, 0, sizeof(buffer));
-          // std::cout << "buffer= " << buffer << std::endl;
-          // std::cout << "buffer[0]= " << buffer[0] << std::endl;
         }
-        /* std::cout << "concat request string" << std::endl;
-        for(size_t i = 0; i < requestString.size(); i++){
-          std::cout << requestString[i];
-        } */
-
-            // std::cout << "concatenetedData = " << std::endl;
-            // std::cout << requestString.data() << std::endl;
-            // std::cout << " #####################  ######################### " << std::endl;
 
         Request request(requestString);
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
@@ -195,14 +170,18 @@ int Server::addListenFdToEpoll(int fd, int epollFd,
 int Server::makeAPortOnFileDescriptorReusable(int fd) {
   int on = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    std::cerr << "Error setting socket options" << std::endl;
+    std::cerr << "Error setting socket option SO_REUSEADDR" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
+    std::cerr << "Error setting socket options SO_REUSEPORT" << std::endl;
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
 
 int Server::makeAFileDescriptorNonBlocking(int fd) {
-  if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+  if (fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     std::cerr << "Error making file descriptor non-blocking" << std::endl;
     return EXIT_FAILURE;
   }
