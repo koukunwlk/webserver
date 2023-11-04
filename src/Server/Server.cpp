@@ -156,7 +156,7 @@ void *Server::thread(void *args) {
         }
 
         request.setServerRoot("www");
-        Handler handle(&request);
+        Handler handle(request);
 
         Response response = handle.getResponse();
         std::stringstream responseStr;

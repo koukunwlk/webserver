@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Handler::Handler(Request *req) : _req(req) {
+Handler::Handler(Request &req) : _req(&req) {
   if (_req->getValidationStatus() == VALID_REQUEST) {
     this->handleRequest();
   } else {
@@ -35,12 +35,12 @@ void Handler::setErrorPage(int code) {
   std::stringstream ss;
   ss << "/" << code << ".html";
   std::string errorFile = ss.str();
-  getHtmlPage(page, "www", errorFile);
+  getHtmlPage(page, "", "www", errorFile);
 
   for (int i = 0; i < (int)errorPages.size(); i++) {
     if (errorPages[i].code == code) {
       page.clear();
-      getHtmlPage(page, rootFolder, errorPages[i].path);
+      getHtmlPage(page, "", rootFolder, errorPages[i].path);
     }
   }
   _res.setBody(page);
@@ -69,6 +69,7 @@ int Handler::handleGET() {
   std::string redirect = _req->getRedirect();
   std::string rootFolder = _req->getServerRoot();
   std::string filePath = _req->getHeaderTarget();
+  std::string location = _req->getServerLocationUrl();
   int status = 0;
 
   if (!redirect.empty()) {
@@ -77,12 +78,12 @@ int Handler::handleGET() {
   }
 
   if (endsWith(filePath, ".php")) {
-    status += getPhpPage(page, rootFolder, filePath);
+    status += getPhpPage(page, location, rootFolder, filePath);
   } else if (endsWith(filePath, ".html")) {
-    status += getHtmlPage(page, rootFolder, filePath);
+    status += getHtmlPage(page, location, rootFolder, filePath);
   } else if (endsWith(filePath, "/") ||
              filePath.find(".") == std::string::npos) {
-    status += getFolder(*_req, page, rootFolder, filePath);
+    status += getFolder(*_req, page, location, rootFolder, filePath);
   }
 
   if (status == 0) {
@@ -95,24 +96,24 @@ int Handler::handleGET() {
   return 0;
 }
 
-
 int Handler::handlePOST() {
-    std::string contentType = _req->getHeaderContentType();
-    std::string requestRawData(_req->getCharRawData());
-    std::vector<unsigned char> rawData = _req->getRawData();
+  std::string contentType = _req->getHeaderContentType();
+  std::string requestRawData(_req->getCharRawData());
+  std::vector<unsigned char> rawData = _req->getRawData();
 
-    std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
-    size_t filenameInitPos = requestRawData.find("filename=") + 10;
-    size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
-    std::string filename = requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
-    size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
-    size_t closingBoundary = rawData.size() - boundary.length() - 7;
-
+  std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
+  size_t filenameInitPos = requestRawData.find("filename=") + 10;
+  size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
+  std::string filename =
+      requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
+  size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
+  size_t closingBoundary = rawData.size() - boundary.length() - 7;
 
   std::ofstream uploadedFile;
   uploadedFile.open(filename.c_str(), std::ios::out | std::ios::binary);
 
-  uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
+  uploadedFile.write((char *)&rawData[nextCrlfPos],
+                     closingBoundary - nextCrlfPos);
 
   uploadedFile.close();
 
@@ -127,7 +128,6 @@ int Handler::handleDELETE() {
   std::string fullPath = rootFolder + "/" + fileName;
 
   if (access(fullPath.c_str(), F_OK)) {
-    std::cout << fullPath << "\n";
     return 1;
   }
 
@@ -162,10 +162,15 @@ Response &Handler::getResponse() { return this->_res; }
 ** --------------------------------- STATICS ---------------------------------
 */
 
-int getHtmlPage(std::string &page, std::string root, std::string filepath) {
+int getHtmlPage(std::string &page, std::string location, std::string root,
+                std::string filepath) {
+  std::string fileParsed = filepath.substr(location.length());
+  if (fileParsed[0] != '/') {
+    fileParsed.insert(0, 1, '/');
+  }
   std::fstream fileStream;
   std::string tmp;
-  std::string fullPath = root + filepath;
+  std::string fullPath = root + fileParsed;
 
   if (access(fullPath.c_str(), F_OK)) {
     return 1;
@@ -179,9 +184,14 @@ int getHtmlPage(std::string &page, std::string root, std::string filepath) {
   return 0;
 }
 
-int getPhpPage(std::string &page, std::string root, std::string filepath) {
+int getPhpPage(std::string &page, std::string location, std::string root,
+               std::string filepath) {
   std::stringstream ss;
-  std::string fullPath = root + filepath;
+  std::string fileParsed = filepath.substr(location.length());
+  if (fileParsed[0] != '/') {
+    fileParsed.insert(0, 1, '/');
+  }
+  std::string fullPath = root + fileParsed;
 
   if (access(fullPath.c_str(), F_OK)) {
     return 1;
@@ -196,7 +206,7 @@ int getPhpPage(std::string &page, std::string root, std::string filepath) {
     dup2(fd[1], STDOUT_FILENO);
 
     char cgi_path[] = "/usr/bin/php-cgi";
-    std::string relativePath = "." + filepath;
+    std::string relativePath = "." + fileParsed;
     char *const command[] = {cgi_path, (char *)relativePath.c_str(), NULL};
 
     chdir(root.c_str());
@@ -216,20 +226,27 @@ int getPhpPage(std::string &page, std::string root, std::string filepath) {
   return 0;
 }
 
-int getFolder(Request &req, std::string &page, std::string rootFolder,
-              std::string filePath) {
+int getFolder(Request &req, std::string &page, std::string location,
+              std::string rootFolder, std::string filepath) {
+  std::string fileParsed = filepath.substr(location.length());
+  if (fileParsed.length() == 0) {
+    fileParsed = '/';
+  }
+  if (fileParsed[0] != '/') {
+    fileParsed.insert(0, 1, '/');
+  }
   std::string fullpath;
   std::vector<std::string> indexes = req.getIndex();
 
   for (int i = 0; i < (int)indexes.size(); i++) {
-    fullpath = rootFolder + filePath + indexes[i];
+    fullpath = rootFolder + fileParsed + "/" + indexes[i];
     if (access(fullpath.c_str(), F_OK) == 0) {
-      return getHtmlPage(page, rootFolder + filePath, indexes[i]);
+      return getHtmlPage(page, "", rootFolder + fileParsed, "/" + indexes[i]);
     }
   }
 
   if (req.getAutoIndex() == true) {
-    return listFolderContent(page, rootFolder + filePath);
+    return listFolderContent(page, rootFolder + fileParsed);
   }
 
   return 1;
@@ -274,7 +291,5 @@ std::string getPhrase(int code) {
   }
   return phrase;
 }
-
-
 
 /* ************************************************************************** */

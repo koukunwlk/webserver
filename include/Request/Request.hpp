@@ -55,6 +55,8 @@ class Request {
   int getValidationStatus() const;
   int setValidationStatus(int);
 
+  std::string getServerLocationUrl() const;
+  void setServerLocationUrl(std::string);
   std::string getServerRoot() const;
   void setServerRoot(std::string);
   std::string getRedirect() const;
@@ -72,6 +74,7 @@ class Request {
   char *_body;
 
   // Propriedades do ServerConfig
+  std::string _locationUrl;
   std::string _root;
   std::string _redirect;
   std::vector<std::string> _index;

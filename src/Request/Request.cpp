@@ -9,11 +9,11 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   parseRequestData();
 }
 
-Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
+Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
+    : _rawData(rawData) {
   std::istringstream iss(getCharRawData());
   std::string requestMethod;
   std::string requestTarget;
-  bool hasMatchingLocation = false;
   Location location;
 
   iss >> requestMethod;
@@ -21,27 +21,33 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _raw
 
   for (size_t i = 0; i < server.locations.size(); i++) {
     location = server.locations[i];
-    if (std::find(location.methods.begin(), location.methods.end(),
-                  requestMethod) != location.methods.end() &&
-        isValidRoute(location.url, requestTarget)) {
-      this->_autoIndex = location.autoindex;
-      this->_root = location.root;
-      this->_redirect = location.redirect;
-      this->_index = location.index;
-      this->_errorPages = location.error_page;
-      hasMatchingLocation = true;
-      this->_validationStatus = VALID_REQUEST;
-      break;
-    }
-    if (isValidRoute(location.url, requestTarget) &&
-        std::find(location.methods.begin(), location.methods.end(),
-                  requestMethod) == location.methods.end()) {
-      this->_validationStatus = INVALID_METHOD;
+
+    if (isValidRoute(location.url, requestTarget)) {
+      if ((location.extension.length() > 0 &&
+           endsWith(requestTarget, location.extension)) ||
+          location.extension.length() == 0) {
+        if (std::find(location.methods.begin(), location.methods.end(),
+                      requestMethod) != location.methods.end()) {
+          this->_locationUrl = location.url;
+          this->_autoIndex = location.autoindex;
+          this->_root = location.root;
+          this->_redirect = location.redirect;
+          this->_index = location.index;
+          this->_errorPages = location.error_page;
+          this->_validationStatus = VALID_REQUEST;
+          break;
+        } else {
+          this->_validationStatus = INVALID_METHOD;
+          break;
+        }
+      } else {
+        this->_validationStatus = INVALID_LOCATION;
+      }
+    } else {
+      this->_validationStatus = INVALID_LOCATION;
     }
   }
-  if (!hasMatchingLocation) {
-    this->_validationStatus = INVALID_LOCATION;
-  }
+  std::cout << this->_validationStatus << std::endl;
   parseRequestData();
 }
 
@@ -55,7 +61,7 @@ Request::~Request() {}
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-std::ostream& operator<<(std::ostream& o, Request &i) {
+std::ostream& operator<<(std::ostream& o, Request& i) {
   o << i.getCharRawData();
   return o;
 }
@@ -68,7 +74,7 @@ void Request::parseRequestData() {
   parseRawHeader();
   parseHeaderProperties();
   validate();
-  //parseBody();
+  // parseBody();
 }
 
 void Request::parseRawHeader() {
@@ -157,7 +163,7 @@ std::string Request::getPropertyValueFrom(std::string line) {
   std::cout << "rawData as string=" << rawData << std::endl;
 
   std::endl(std::cout);
-  
+
   std::cout << "rawData = " << std::endl;
   for(size_t i = 0; i< _rawData.size(); i++){
     std::cout << _rawData[i];
@@ -213,7 +219,9 @@ char* Request::getBody() const { return _body; }
 
 std::vector<unsigned char> Request::getRawData() { return _rawData; }
 
-char * Request::getCharRawData() { return reinterpret_cast<char*>(_rawData.data()); }
+char* Request::getCharRawData() {
+  return reinterpret_cast<char*>(_rawData.data());
+}
 
 std::string Request::getHeaderTarget() const { return _header.target; }
 
@@ -236,6 +244,9 @@ int Request::getValidationStatus() const { return _validationStatus; }
 int Request::setValidationStatus(int status) {
   return _validationStatus = status;
 }
+std::string Request::getServerLocationUrl() const { return _locationUrl; }
+
+void Request::setServerLocationUrl(std::string url) { _locationUrl = url; }
 
 std::string Request::getServerRoot() const { return _root; }
 
@@ -277,16 +288,23 @@ bool isFile(std::string contentType) {
 }
 
 bool isValidRoute(std::string locationUrl, std::string requestTarget) {
-  for(size_t i = 0; i <= locationUrl.length(); i++){
-    if(locationUrl[i] != requestTarget[i]) {
-      if (requestTarget[i] == '/' && locationUrl[i] == '\0')
-        return true;
-      if (locationUrl.length() == 1)
-        return true;
+  for (size_t i = 0; i <= locationUrl.length(); i++) {
+    if (locationUrl[i] != requestTarget[i]) {
+      if (requestTarget[i] == '/' && locationUrl[i] == '\0') return true;
+      if (locationUrl.length() == 1) return true;
       return false;
     }
   }
   return true;
+}
+
+bool endsWiths(std::string fullString, std::string ending) {
+  if (fullString.length() >= ending.length()) {
+    return (0 == fullString.compare(fullString.length() - ending.length(),
+                                    ending.length(), ending));
+  } else {
+    return false;
+  }
 }
 
 /* ************************************************************************** */
