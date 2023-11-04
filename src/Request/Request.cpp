@@ -274,6 +274,12 @@ void Request::setAutoIndex(std::string autoIndex) {
   _autoIndex = (0 == autoIndex.compare("on"));
 }
 
+std::string Request::getUploadStore() const { return _uploadStore; }
+
+void Request::setUploadStore(std::string uploadStore) {
+  _uploadStore = uploadStore;
+}
+
 /*
 ** --------------------------------- STATIC ---------------------------------
 */

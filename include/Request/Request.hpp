@@ -67,6 +67,8 @@ class Request {
   void setErrorPages(std::vector<ErrorPage>);
   bool getAutoIndex() const;
   void setAutoIndex(std::string);
+  std::string getUploadStore() const;
+  void setUploadStore(std::string);
 
  private:
   std::vector<unsigned char> _rawData;
@@ -80,6 +82,7 @@ class Request {
   std::vector<std::string> _index;
   std::vector<ErrorPage> _errorPages;
   bool _autoIndex;
+  std::string _uploadStore;
 
   int _validationStatus;
 

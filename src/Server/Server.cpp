@@ -76,6 +76,7 @@ void *Server::thread(void *args) {
   }
 
   int port = ((ThreadArgs *)args)->currentServer.port;
+  
 
   struct epoll_event ev;
 
@@ -132,22 +133,9 @@ void *Server::thread(void *args) {
           } else if (bytesReceived == 0)
             break;
           requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
-/*           std::cout << "########### BUFFER ############" << std::endl;
-          std::cout << buffer << std::endl;
-          std::cout << "########### REQUESTSTRING #############" << std::endl;
-          std::cout << requestString.data() << std::endl; */
           memset(buffer, 0, sizeof(buffer));
-          // std::cout << "buffer= " << buffer << std::endl;
-          // std::cout << "buffer[0]= " << buffer[0] << std::endl;
-        }
-        /* std::cout << "concat request string" << std::endl;
-        for(size_t i = 0; i < requestString.size(); i++){
-          std::cout << requestString[i];
-        } */
 
-            // std::cout << "concatenetedData = " << std::endl;
-            // std::cout << requestString.data() << std::endl;
-            // std::cout << " #####################  ######################### " << std::endl;
+        }
 
         Request request(requestString, ((ThreadArgs *)args)->currentServer);
         // Request request(requestString);
