@@ -9,8 +9,8 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   parseRequestData();
 }
 
-/* Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
-  std::istringstream iss(rawData);
+Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
+  std::istringstream iss(reinterpret_cast<char*>(_rawData.data()));
   std::string requestMethod;
   std::string requestTarget;
   bool hasMatchingLocation = false;
@@ -21,14 +21,16 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
 
   for (size_t i = 0; i < server.locations.size(); i++) {
     location = server.locations[i];
+    std::string requestTargetWithoutExtension = requestTarget.substr(0, requestTarget.find("."));
     if (std::find(location.methods.begin(), location.methods.end(),
                   requestMethod) != location.methods.end() &&
-        location.url == requestTarget) {
+        location.url == requestTargetWithoutExtension) {
       this->_autoIndex = location.autoindex;
       this->_root = location.root;
       this->_redirect = location.redirect;
       this->_index = location.index;
       this->_errorPages = location.error_page;
+      this->_uploadStore = location.upload_store;
       hasMatchingLocation = true;
       this->_validationStatus = VALID_REQUEST;
       break;
@@ -43,7 +45,7 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
     this->_validationStatus = INVALID_LOCATION;
   }
   parseRequestData();
-} */
+}
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -261,6 +263,12 @@ bool Request::getAutoIndex() const { return _autoIndex; }
 
 void Request::setAutoIndex(std::string autoIndex) {
   _autoIndex = (0 == autoIndex.compare("on"));
+}
+
+std::string Request::getUploadStore() const { return _uploadStore; }
+
+void Request::setUploadStore(std::string uploadStore) {
+  _uploadStore = uploadStore;
 }
 
 /*

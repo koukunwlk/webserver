@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <iostream>
+#include <sys/stat.h>
 #include <map>
 #include <sstream>
 #include <string>
@@ -26,6 +27,7 @@ struct Location {
   std::string redirect;
   std::vector<ErrorPage> error_page;
   std::vector<std::string> methods;
+  std::string upload_store;
 };
 
 struct ServerConfig {

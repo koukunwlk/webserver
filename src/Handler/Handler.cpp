@@ -100,6 +100,7 @@ int Handler::handlePOST() {
     std::string contentType = _req->getHeaderContentType();
     std::string requestRawData(_req->getCharRawData());
     std::vector<unsigned char> rawData = _req->getRawData();
+    std::string uploadStore = _req->getUploadStore();
 
     std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
     size_t filenameInitPos = requestRawData.find("filename=") + 10;
@@ -108,17 +109,18 @@ int Handler::handlePOST() {
     size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
     size_t closingBoundary = rawData.size() - boundary.length() - 7;
 
+    std::string filePath = uploadStore + "/" + filename;
+    
+    std::ofstream uploadedFile;
+    uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
 
-  std::ofstream uploadedFile;
-  uploadedFile.open(filename.c_str(), std::ios::out | std::ios::binary);
+    uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
 
-  uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
+    uploadedFile.close();
 
-  uploadedFile.close();
-
-  _res.setStatusCode(201);
-  _res.setReasonPhrase("CREATED");
-  return 0;
+    _res.setStatusCode(201);
+    _res.setReasonPhrase("CREATED");
+    return 0;
 }
 
 int Handler::handleDELETE() {
@@ -139,7 +141,7 @@ int Handler::handleDELETE() {
 
 void Handler::handleRequest() {
   int status = 0;
-
+  std::cout << "Method: " << _req->getHeaderMethod() << std::endl;
   if (_req->getHeaderMethod().compare("GET") == 0) {
     status += handleGET();
   } else if (_req->getHeaderMethod().compare("POST") == 0) {
