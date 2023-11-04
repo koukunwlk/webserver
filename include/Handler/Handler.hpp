@@ -17,7 +17,7 @@ class Request;
 class Handler {
  public:
   Handler();
-  Handler(Request *);
+  Handler(Request &);
   ~Handler();
 
   Response &getResponse();

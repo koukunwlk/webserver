@@ -6,44 +6,46 @@
 
 Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   _header.contentLength = 0;
+  setValidationStatus(0);
+  // setAutoIndex("on"); // to help avoid unit value error
   parseRequestData();
 }
 
-/* Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
-  std::istringstream iss(rawData);
-  std::string requestMethod;
-  std::string requestTarget;
-  bool hasMatchingLocation = false;
-  Location location;
+// Request::Request(std::vector<unsigned char> rawData, ServerConfig server) : _rawData(rawData) {
+//   std::istringstream iss(rawData);
+//   std::string requestMethod;
+//   std::string requestTarget;
+//   bool hasMatchingLocation = false;
+//   Location location;
 
-  iss >> requestMethod;
-  iss >> requestTarget;
+//   iss >> requestMethod;
+//   iss >> requestTarget;
 
-  for (size_t i = 0; i < server.locations.size(); i++) {
-    location = server.locations[i];
-    if (std::find(location.methods.begin(), location.methods.end(),
-                  requestMethod) != location.methods.end() &&
-        location.url == requestTarget) {
-      this->_autoIndex = location.autoindex;
-      this->_root = location.root;
-      this->_redirect = location.redirect;
-      this->_index = location.index;
-      this->_errorPages = location.error_page;
-      hasMatchingLocation = true;
-      this->_validationStatus = VALID_REQUEST;
-      break;
-    }
-    if (location.url == requestTarget &&
-        std::find(location.methods.begin(), location.methods.end(),
-                  requestMethod) == location.methods.end()) {
-      this->_validationStatus = INVALID_METHOD;
-    }
-  }
-  if (!hasMatchingLocation) {
-    this->_validationStatus = INVALID_LOCATION;
-  }
-  parseRequestData();
-} */
+//   for (size_t i = 0; i < server.locations.size(); i++) {
+//     location = server.locations[i];
+//     if (std::find(location.methods.begin(), location.methods.end(),
+//                   requestMethod) != location.methods.end() &&
+//         location.url == requestTarget) {
+//       this->_autoIndex = location.autoindex;
+//       this->_root = location.root;
+//       this->_redirect = location.redirect;
+//       this->_index = location.index;
+//       this->_errorPages = location.error_page;
+//       hasMatchingLocation = true;
+//       this->_validationStatus = VALID_REQUEST;
+//       break;
+//     }
+//     if (location.url == requestTarget &&
+//         std::find(location.methods.begin(), location.methods.end(),
+//                   requestMethod) == location.methods.end()) {
+//       this->_validationStatus = INVALID_METHOD;
+//     }
+//   }
+//   if (!hasMatchingLocation) {
+//     this->_validationStatus = INVALID_LOCATION;
+//   }
+//   parseRequestData();
+// }
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -72,7 +74,8 @@ void Request::parseRequestData() {
 }
 
 void Request::parseRawHeader() {
-  std::string rawData(reinterpret_cast<char*>(_rawData.data()));
+  std::string rawData(reinterpret_cast<char*>(_rawData.data()), _rawData.size());
+  // std::string rawData((char *)_rawData.data());
   std::size_t delim = rawData.find(CRLF);
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
@@ -157,7 +160,7 @@ std::string Request::getPropertyValueFrom(std::string line) {
   std::cout << "rawData as string=" << rawData << std::endl;
 
   std::endl(std::cout);
-  
+
   std::cout << "rawData = " << std::endl;
   for(size_t i = 0; i< _rawData.size(); i++){
     std::cout << _rawData[i];
@@ -192,17 +195,24 @@ void Request::validateContentLength() {
 }
 
 void Request::validateBody() {
+  std::cout << "ASKASDKFMNALSKDMFLKDSMFA << " << std::endl;
   size_t contentLength = this->getHeaderContentLength();
   std::string contentType = this->getHeaderContentType();
   if (contentLength == 0 || isFile(contentType)) {
+  std::cerr << "DENTRO DO IF" << std::endl;
     return;
   }
-  size_t reqLen = strlen(this->getCharRawData());
+  size_t reqLen = strlen(reinterpret_cast<char *>(this->getCharRawData()));
   size_t headerSize = this->getHeaderRawDate().length() + 4;
+
+  size_t padding = reqLen - (headerSize + contentLength);
+  std::cerr << reqLen << std::endl;
+  std::cerr << "PADDING VALUE: " << padding << std::endl;
 
   if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
   }
+
 }
 
 /*

@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Handler::Handler(Request *req) : _req(req) {
+Handler::Handler(Request &req) : _req(&req) {
   if (_req->getValidationStatus() == VALID_REQUEST) {
     this->handleRequest();
   } else {
@@ -65,7 +65,7 @@ int Handler::handleError(int status) {
 }
 
 int Handler::handleGET() {
-  std::string page;
+  std::string page = "";
   std::string redirect = _req->getRedirect();
   std::string rootFolder = _req->getServerRoot();
   std::string filePath = _req->getHeaderTarget();
