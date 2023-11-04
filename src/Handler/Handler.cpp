@@ -111,6 +111,7 @@ int Handler::handlePOST() {
 
     std::string filePath = uploadStore + "/" + filename;
     
+    std::cout << "Filepath: " << filePath << std::endl;
     std::ofstream uploadedFile;
     uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
 

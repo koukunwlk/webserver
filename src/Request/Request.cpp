@@ -34,6 +34,7 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
           this->_redirect = location.redirect;
           this->_index = location.index;
           this->_errorPages = location.error_page;
+          this->_uploadStore = location.upload_store;
           this->_validationStatus = VALID_REQUEST;
           break;
         } else {
@@ -47,7 +48,6 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
       this->_validationStatus = INVALID_LOCATION;
     }
   }
-  std::cout << this->_validationStatus << std::endl;
   parseRequestData();
 }
 
@@ -151,24 +151,6 @@ std::string Request::getPropertyValueFrom(std::string line) {
 
   return propertyValue;
 }
-
-/* void Request::parseBody() {
-  if (this->getHeaderContentLength() < 1 ||
-      isFile(this->getHeaderContentType())) {
-    return;
-  }
-
-  std::string rawData(reinterpret_cast<char*>(_rawData.data()));
-
-  std::cout << "rawData as string=" << rawData << std::endl;
-
-  std::endl(std::cout);
-
-  std::cout << "rawData = " << std::endl;
-  for(size_t i = 0; i< _rawData.size(); i++){
-    std::cout << _rawData[i];
-  }
-} */
 
 void Request::validate() {
   validateMethod();

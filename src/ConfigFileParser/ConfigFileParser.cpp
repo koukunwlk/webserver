@@ -182,6 +182,7 @@ Location Parser::createLocation(Block location) {
     }
 
     if(currentProperty.first.compare("upload_store") == 0) {
+      std::cout << "property upload_store found " << currentProperty.second[0] <<  std::endl;
       std::string path = currentProperty.second[0];
       struct stat info;
 
