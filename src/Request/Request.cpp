@@ -13,11 +13,12 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
 
 Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
     : _rawData(rawData) {
-  std::istringstream iss(getCharRawData());
+    
+  std::istringstream iss(getStringRawData());
   std::string requestMethod;
   std::string requestTarget;
   Location location;
-  _header.contentLength = 0;
+   _header.contentLength = 0;
 
   iss >> requestMethod;
   iss >> requestTarget;
@@ -68,7 +69,7 @@ Request::~Request() {}
 */
 
 std::ostream& operator<<(std::ostream& o, Request& i) {
-  o << i.getCharRawData();
+  o << i.getStringRawData();
   return o;
 }
 
@@ -88,9 +89,9 @@ bool Request::parseRequestData() {
 }
 
 void Request::parseRawHeader() {
-  std::string rawData(reinterpret_cast<char*>(_rawData.data()), _rawData.size());
-  // std::string rawData((char *)_rawData.data());
+  std::string rawData = getStringRawData();
   std::size_t delim = rawData.find(CRLF);
+  std::cout << "delim: " << (delim == std::string::npos) << std::endl;
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
   }
@@ -196,7 +197,7 @@ void Request::validateBody() {
   if (contentLength == 0 || isFile(contentType)) {
     return;
   }
-  size_t reqLen = strlen(reinterpret_cast<char *>(this->getCharRawData()));
+  size_t reqLen = strlen(this->getStringRawData().c_str());
   size_t headerSize = this->getHeaderRawDate().length() + 4;
   if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
@@ -212,8 +213,12 @@ char* Request::getBody() const { return _body; }
 
 std::vector<unsigned char> Request::getRawData() { return _rawData; }
 
-char* Request::getCharRawData() {
-  return reinterpret_cast<char*>(_rawData.data());
+std::string Request::getStringRawData() {
+  char *rawData =  reinterpret_cast<char*>(_rawData.data());
+  if(!rawData) return "";
+  std::string str(rawData);
+
+  return str;
 }
 
 std::string Request::getHeaderTarget() const { return _header.target; }

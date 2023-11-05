@@ -40,7 +40,7 @@ class Request {
   Request(std::vector<unsigned char>);
   ~Request();
 
-  char *getCharRawData();
+  std::string getStringRawData();
   std::vector<unsigned char> getRawData();
 
   char *getBody() const;
