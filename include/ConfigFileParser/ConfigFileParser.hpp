@@ -33,7 +33,7 @@ struct Location {
 struct ServerConfig {
   int port;
   std::vector<std::string> server_names;
-  std::string client_max_body_size;
+  int client_max_body_size;
   std::vector<Location> locations;
 };
 
@@ -80,6 +80,7 @@ class Parser {
 
 std::string str_trim(const std::string& str);
 std::string removeComments(std::string line);
+int convertSize(std::string size);
 
 /*
   * 1. string no formato      "GET /teste.php HTTP/1.1\r\n"

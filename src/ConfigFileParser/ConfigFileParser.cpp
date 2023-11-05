@@ -125,7 +125,8 @@ void Parser::createServer(Block server) {
     }
 
     if (currentProperty.first.compare("client_max_body_size") == 0) {
-      serverConfig.client_max_body_size = currentProperty.second[0];
+      serverConfig.client_max_body_size =
+          convertSize(currentProperty.second[0]);
     }
 
     if (currentProperty.first.compare("location") == 0) {
@@ -181,15 +182,14 @@ Location Parser::createLocation(Block location) {
       locationConfig.autoindex = currentProperty.second[0].compare("on") == 0;
     }
 
-    if(currentProperty.first.compare("upload_store") == 0) {
-      std::cout << "property upload_store found " << currentProperty.second[0] <<  std::endl;
+    if (currentProperty.first.compare("upload_store") == 0) {
       std::string path = currentProperty.second[0];
       struct stat info;
 
-    if(stat( path.c_str(), &info ) != 0) {
+      if (stat(path.c_str(), &info) != 0) {
         throw ParsingException("Invalid upload_store path");
-    }
-    locationConfig.upload_store = path;
+      }
+      locationConfig.upload_store = path;
     }
   }
   return locationConfig;
@@ -222,4 +222,17 @@ std::string removeComments(std::string line) {
     line = line.substr(0, comment);
   }
   return line;
+}
+
+int convertSize(std::string size) {
+  int sizeAsInt = atoi(size.c_str());
+  char unit = size[size.length() - 1];
+
+  if (unit == 'M') {
+    sizeAsInt *= 1048576;
+  } else if (unit == 'K') {
+    sizeAsInt *= 1024;
+  }
+
+  return sizeAsInt;
 }

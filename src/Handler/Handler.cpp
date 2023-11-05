@@ -5,6 +5,7 @@
 */
 
 Handler::Handler(Request &req) : _req(&req) {
+  _status = 0;
   if (_req->getValidationStatus() == VALID_REQUEST) {
     this->handleRequest();
   } else {
@@ -57,6 +58,9 @@ int Handler::handleError(int status) {
     case INVALID_METHOD:
       setErrorPage(405);
       break;
+    case INVALID_REQUEST:
+      setErrorPage(406);
+      break;
     default:
       setErrorPage(500);
       break;
@@ -97,32 +101,31 @@ int Handler::handleGET() {
 }
 
 int Handler::handlePOST() {
-    std::string contentType = _req->getHeaderContentType();
-    std::string requestRawData(_req->getCharRawData());
-    std::vector<unsigned char> rawData = _req->getRawData();
-    std::string uploadStore = _req->getUploadStore();
+  std::string contentType = _req->getHeaderContentType();
+  std::string requestRawData(_req->getCharRawData());
+  std::vector<unsigned char> rawData = _req->getRawData();
+  std::string uploadStore = _req->getUploadStore();
 
-    std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
-    size_t filenameInitPos = requestRawData.find("filename=") + 10;
-    size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
-    std::string filename = requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
-    size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
-    size_t closingBoundary = rawData.size() - boundary.length() - 7;
+  std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
+  size_t filenameInitPos = requestRawData.find("filename=") + 10;
+  size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
+  std::string filename =
+      requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
+  size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
+  size_t closingBoundary = rawData.size() - boundary.length() - 7;
 
-    std::string filePath = uploadStore + "/" + filename;
-    
-    std::cout << "Filepath: " << filePath << std::endl;
-    std::ofstream uploadedFile;
-    uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
+  std::string filePath = uploadStore + "/" + filename;
 
-    uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
+  std::cout << "Filepath: " << filePath << std::endl;
+  std::ofstream uploadedFile;
+  uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
 
   uploadedFile.write((char *)&rawData[nextCrlfPos],
                      closingBoundary - nextCrlfPos);
 
-    _res.setStatusCode(201);
-    _res.setReasonPhrase("CREATED");
-    return 0;
+  _res.setStatusCode(201);
+  _res.setReasonPhrase("CREATED");
+  return 0;
 }
 
 int Handler::handleDELETE() {

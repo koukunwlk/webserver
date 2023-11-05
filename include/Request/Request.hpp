@@ -16,6 +16,7 @@
 #define INVALID_HEADER 1
 #define INVALID_METHOD 2
 #define INVALID_LOCATION 3
+#define INVALID_REQUEST 4
 
 typedef struct RequestHeader {
   std::string rawData;
@@ -55,6 +56,8 @@ class Request {
   int getValidationStatus() const;
   int setValidationStatus(int);
 
+  int getServerMaxBodySize() const;
+  void setServerMaxBodySize(int);
   std::string getServerLocationUrl() const;
   void setServerLocationUrl(std::string);
   std::string getServerRoot() const;
@@ -83,10 +86,11 @@ class Request {
   std::vector<ErrorPage> _errorPages;
   bool _autoIndex;
   std::string _uploadStore;
+  int _clientMaxBodySize;
 
   int _validationStatus;
 
-  void parseRequestData();
+  bool parseRequestData();
   void parseRawHeader();
   void parseHeaderProperties();
   void parseBody();

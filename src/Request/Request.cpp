@@ -15,6 +15,7 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
   std::string requestMethod;
   std::string requestTarget;
   Location location;
+  _header.contentLength = 0;
 
   iss >> requestMethod;
   iss >> requestTarget;
@@ -35,6 +36,7 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
           this->_index = location.index;
           this->_errorPages = location.error_page;
           this->_uploadStore = location.upload_store;
+          this->_clientMaxBodySize = server.client_max_body_size;
           this->_validationStatus = VALID_REQUEST;
           break;
         } else {
@@ -48,7 +50,9 @@ Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
       this->_validationStatus = INVALID_LOCATION;
     }
   }
-  parseRequestData();
+  if (!parseRequestData()) {
+    this->_validationStatus = INVALID_REQUEST;
+  }
 }
 
 /*
@@ -70,11 +74,15 @@ std::ostream& operator<<(std::ostream& o, Request& i) {
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void Request::parseRequestData() {
-  parseRawHeader();
-  parseHeaderProperties();
-  validate();
-  // parseBody();
+bool Request::parseRequestData() {
+  try {
+    parseRawHeader();
+    parseHeaderProperties();
+    validate();
+  } catch (std::exception& e) {
+    return false;
+  }
+  return true;
 }
 
 void Request::parseRawHeader() {
@@ -174,7 +182,7 @@ void Request::validateMethod() {
 }
 
 void Request::validateContentLength() {
-  if (_header.contentLength < 0) {
+  if (_header.contentLength < 0 || _header.contentLength > this->getServerMaxBodySize()) {
     throw RequestValidationException();
   }
 }
@@ -229,6 +237,10 @@ int Request::setValidationStatus(int status) {
 std::string Request::getServerLocationUrl() const { return _locationUrl; }
 
 void Request::setServerLocationUrl(std::string url) { _locationUrl = url; }
+
+int Request::getServerMaxBodySize() const { return _clientMaxBodySize; }
+
+void Request::setServerMaxBodySize(int size) { _clientMaxBodySize = size; }
 
 std::string Request::getServerRoot() const { return _root; }
 

@@ -75,8 +75,9 @@ void *Server::thread(void *args) {
     perror("Error creating epoll instance");
   }
 
-  int port = ((ThreadArgs *)args)->currentServer.port;
-  
+  ServerConfig currentServer = ((ThreadArgs *)args)->currentServer;
+
+  int port = currentServer.port;
 
   struct epoll_event ev;
 
@@ -137,13 +138,11 @@ void *Server::thread(void *args) {
 
         }
 
-        Request request(requestString, ((ThreadArgs *)args)->currentServer);
-        // Request request(requestString);
+        Request request(requestString, currentServer);
         if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
           perror("epoll_ctl error ");
         }
 
-        request.setServerRoot("www");
         Handler handle(request);
 
         Response response = handle.getResponse();
