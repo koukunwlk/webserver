@@ -180,6 +180,17 @@ Location Parser::createLocation(Block location) {
     if (currentProperty.first.compare("autoindex") == 0) {
       locationConfig.autoindex = currentProperty.second[0].compare("on") == 0;
     }
+
+    if(currentProperty.first.compare("upload_store") == 0) {
+      std::cout << "property upload_store found " << currentProperty.second[0] <<  std::endl;
+      std::string path = currentProperty.second[0];
+      struct stat info;
+
+    if(stat( path.c_str(), &info ) != 0) {
+        throw ParsingException("Invalid upload_store path");
+    }
+    locationConfig.upload_store = path;
+    }
   }
   return locationConfig;
 }

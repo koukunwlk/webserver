@@ -106,6 +106,7 @@ void *Server::thread(void *args) {
   }
   tArgs->fds.push_back(epollFd);
   int port = ((ThreadArgs *)args)->currentServer.port;
+  
 
   struct epoll_event ev;
 
@@ -164,20 +165,26 @@ void *Server::thread(void *args) {
             break;
           requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
           memset(buffer, 0, sizeof(buffer));
+
         }
-          Request request(requestString);
-          if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
-            perror("epoll_ctl error ");
-          }
-          request.setServerRoot("www");
-          Handler handle(request);
-          Response response = handle.getResponse();
-          std::stringstream responseStr;
-          responseStr << response;
-          write(clientFd, responseStr.str().c_str(), responseStr.str().length());
-          if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
-            perror("Error while delete clientFd from Epol");
-          close(clientFd);
+
+        Request request(requestString, ((ThreadArgs *)args)->currentServer);
+        // Request request(requestString);
+        if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
+          perror("epoll_ctl error ");
+        }
+
+        request.setServerRoot("www");
+        Handler handle(request);
+
+        Response response = handle.getResponse();
+        std::stringstream responseStr;
+        responseStr << response;
+
+        write(clientFd, responseStr.str().c_str(), responseStr.str().length());
+        if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
+          perror("Error while delete clientFd from Epol");
+        close(clientFd);
       }
     }
   }

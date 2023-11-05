@@ -35,7 +35,7 @@ typedef struct RequestHeader {
 
 class Request {
  public:
-  //Request(char *, ServerConfig);
+  Request(std::vector<unsigned char>, ServerConfig);
   Request(std::vector<unsigned char>);
   ~Request();
 
@@ -55,6 +55,8 @@ class Request {
   int getValidationStatus() const;
   int setValidationStatus(int);
 
+  std::string getServerLocationUrl() const;
+  void setServerLocationUrl(std::string);
   std::string getServerRoot() const;
   void setServerRoot(std::string);
   std::string getRedirect() const;
@@ -65,6 +67,8 @@ class Request {
   void setErrorPages(std::vector<ErrorPage>);
   bool getAutoIndex() const;
   void setAutoIndex(std::string);
+  std::string getUploadStore() const;
+  void setUploadStore(std::string);
 
  private:
   std::vector<unsigned char> _rawData;
@@ -72,11 +76,13 @@ class Request {
   char *_body;
 
   // Propriedades do ServerConfig
+  std::string _locationUrl;
   std::string _root;
   std::string _redirect;
   std::vector<std::string> _index;
   std::vector<ErrorPage> _errorPages;
   bool _autoIndex;
+  std::string _uploadStore;
 
   int _validationStatus;
 
@@ -96,3 +102,4 @@ class Request {
 
 std::ostream &operator<<(std::ostream &o, Request const &i);
 bool isFile(std::string contentType);
+bool isValidRoute(std::string locationUrl, std::string requestTarget);

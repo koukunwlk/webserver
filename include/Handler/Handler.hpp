@@ -34,10 +34,12 @@ class Handler {
   Response _res;
 };
 
-int getHtmlPage(std::string &page, std::string root, std::string filepath);
-int getPhpPage(std::string &page, std::string root, std::string filepath);
-int getFolder(Request &req, std::string &page, std::string root,
-              std::string filepath);
+int getHtmlPage(std::string &page, std::string location, std::string root,
+                std::string filepath);
+int getPhpPage(std::string &page, std::string location, std::string root,
+               std::string filepath);
+int getFolder(Request &req, std::string &page, std::string location,
+              std::string root, std::string filepath);
 int listFolderContent(std::string &page, std::string fullpath);
 bool endsWith(std::string fullString, std::string ending);
 std::string getPhrase(int code);
