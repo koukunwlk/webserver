@@ -6,6 +6,8 @@
 
 Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   _header.contentLength = 0;
+  setValidationStatus(0);
+  // setAutoIndex("on"); // to help avoid unit value error
   parseRequestData();
 }
 
@@ -86,7 +88,8 @@ bool Request::parseRequestData() {
 }
 
 void Request::parseRawHeader() {
-  std::string rawData(reinterpret_cast<char*>(_rawData.data()));
+  std::string rawData(reinterpret_cast<char*>(_rawData.data()), _rawData.size());
+  // std::string rawData((char *)_rawData.data());
   std::size_t delim = rawData.find(CRLF);
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
@@ -193,12 +196,12 @@ void Request::validateBody() {
   if (contentLength == 0 || isFile(contentType)) {
     return;
   }
-  size_t reqLen = strlen(this->getCharRawData());
+  size_t reqLen = strlen(reinterpret_cast<char *>(this->getCharRawData()));
   size_t headerSize = this->getHeaderRawDate().length() + 4;
-
   if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
   }
+
 }
 
 /*

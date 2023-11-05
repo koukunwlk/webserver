@@ -3,7 +3,11 @@
 // Constructors
 Server::Server() {}
 
-Server::Server(std::vector<ServerConfig> config) { createThreadPool(config); }
+Server::Server(std::vector<ServerConfig> config) {
+  signalHandler();
+  createThreadPool(config);
+
+ }
 
 // Destructor
 Server::~Server() { closeServer(); }
@@ -20,13 +24,14 @@ int Server::createThreadPool(std::vector<ServerConfig> config) {
       std::cerr << "Error creating thread" << std::endl;
       return EXIT_FAILURE;
     }
+    this->_tArgs.threads.push_back(threads[i]);
     sleep(1);
   }
 
   return EXIT_SUCCESS;
 }
 
-void Server::closeServer() { close(this->_epollFd); }
+void Server::closeServer() { }
 
 int Server::putFdToListen(struct sockaddr_in listenAddress) {
   int fd;
@@ -57,17 +62,42 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
 }
 
 
-/* 
-    string = "0123456789"
-    buffer[4];
+void Server::signalHandler() {
+  pthread_t thread;
+  sigemptyset(&this->set);
+  sigaddset(&this->set, SIGINT);
+  pthread_sigmask(SIG_BLOCK, &set, 0);
 
-    buffer[4] = "0123"; 
+  this->_tArgs.sigSet = set;
+  pthread_create(&thread, NULL, signalThread, static_cast<void *>(&
+  this->_tArgs));
+  this->_threads.push_back(thread);
+}
 
-                          0                 0123                        
-  requestString.insert(requestString.end(), buffer, buffer + bytesReceived)
- */
+void *Server::signalThread(void *args) {
+  ThreadArgs *tArgs = (ThreadArgs *)args;
+  int sig;
+  int err;
+  sigset_t sigs;
+  sigset_t oldSigSet;
+
+  sigfillset(&sigs);
+  pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
+  err = sigwait(&tArgs->sigSet, &sig);
+
+  if(err) {
+    perror("Error waiting for signal");
+  } else {
+    for (size_t i = 0; i < tArgs->fds.size(); i++) {
+      close(tArgs->fds[i]);
+    }
+    serverIsRunning = false;
+  }
+  return NULL;
+}
 
 void *Server::thread(void *args) {
+  ThreadArgs *tArgs = (ThreadArgs *)args;
   int epollFd;
   struct epoll_event *epEvent =
       (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
@@ -78,6 +108,7 @@ void *Server::thread(void *args) {
   ServerConfig currentServer = ((ThreadArgs *)args)->currentServer;
 
   int port = currentServer.port;
+  tArgs->fds.push_back(epollFd);
 
   struct epoll_event ev;
 
@@ -89,13 +120,13 @@ void *Server::thread(void *args) {
 
   listenFd = putFdToListen(listenAddr);
   addListenFdToEpoll(listenFd, epollFd, epEvent);
-
+  tArgs->fds.push_back(listenFd);
   int clientFd;
   struct sockaddr_in clientAddr;
   socklen_t clientAddrLen = sizeof(clientAddr);
 
   int readyFds;
-  while (1) {
+  while (serverIsRunning) {
     readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
     if (readyFds <= 0) {
       std::cerr << "Error on epoll_wait" << std::endl;
@@ -112,6 +143,7 @@ void *Server::thread(void *args) {
             break;
           }
         }
+        tArgs->fds.push_back(epollFd);
 
         makeAFileDescriptorNonBlocking(clientFd);
         ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
@@ -127,7 +159,7 @@ void *Server::thread(void *args) {
         while (1) {
           bytesReceived = read(clientFd, buffer, sizeof(buffer));
           if (bytesReceived < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            if (bytesReceived == -1 && fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
               break;
             else
               perror("read");
@@ -157,7 +189,7 @@ void *Server::thread(void *args) {
     }
   }
   free(epEvent);
-  close(listenFd);
+  return NULL;
 }
 
 int Server::createEpollInstance() {
@@ -183,14 +215,18 @@ int Server::addListenFdToEpoll(int fd, int epollFd,
 int Server::makeAPortOnFileDescriptorReusable(int fd) {
   int on = 1;
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-    std::cerr << "Error setting socket options" << std::endl;
+    std::cerr << "Error setting socket option SO_REUSEADDR" << std::endl;
+    return EXIT_FAILURE;
+  }
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, (char *)&on, sizeof(on)) < 0) {
+    std::cerr << "Error setting socket options SO_REUSEPORT" << std::endl;
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
 
 int Server::makeAFileDescriptorNonBlocking(int fd) {
-  if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+  if (fcntl(fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     std::cerr << "Error making file descriptor non-blocking" << std::endl;
     return EXIT_FAILURE;
   }

@@ -1,7 +1,10 @@
 #include "Server/Server.hpp"
 #include "webserver.hpp"
 
+bool serverIsRunning = true;
+
 int main(int argc, char** argv) {
+  signal(SIGINT, SIG_IGN);
   if (argc < 2){
     std::cout << "Usage:\t./webserver <config_file.conf>\n";
     return EXIT_FAILURE;
@@ -21,7 +24,7 @@ int main(int argc, char** argv) {
   std::vector<ServerConfig> configs = parser->getServerConfigs();
   Server server = Server(configs);
 
-  while (1) {
+  while (serverIsRunning) {
   }
-  
+
 }

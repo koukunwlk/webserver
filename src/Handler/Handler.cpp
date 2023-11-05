@@ -69,7 +69,7 @@ int Handler::handleError(int status) {
 }
 
 int Handler::handleGET() {
-  std::string page;
+  std::string page = "";
   std::string redirect = _req->getRedirect();
   std::string rootFolder = _req->getServerRoot();
   std::string filePath = _req->getHeaderTarget();
