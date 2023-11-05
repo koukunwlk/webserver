@@ -80,15 +80,14 @@ void *Server::signalThread(void *args) {
   int err;
   sigset_t sigs;
   sigset_t oldSigSet;
+
   sigfillset(&sigs);
   pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
-
   err = sigwait(&tArgs->sigSet, &sig);
 
   if(err) {
-    std::cerr << "Error on sigwait" << std::endl;
+    perror("Error waiting for signal");
   } else {
-    std::cout << "Caught signal: " << sig << std::endl;
     for (size_t i = 0; i < tArgs->fds.size(); i++) {
       close(tArgs->fds[i]);
     }
@@ -166,7 +165,6 @@ void *Server::thread(void *args) {
           requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
           memset(buffer, 0, sizeof(buffer));
         }
-          // std::cout << requestString.data() << std::endl;
           Request request(requestString);
           if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
             perror("epoll_ctl error ");
@@ -184,7 +182,6 @@ void *Server::thread(void *args) {
     }
   }
   free(epEvent);
-  close(listenFd);
   return NULL;
 }
 

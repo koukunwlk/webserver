@@ -195,20 +195,13 @@ void Request::validateContentLength() {
 }
 
 void Request::validateBody() {
-  std::cout << "ASKASDKFMNALSKDMFLKDSMFA << " << std::endl;
   size_t contentLength = this->getHeaderContentLength();
   std::string contentType = this->getHeaderContentType();
   if (contentLength == 0 || isFile(contentType)) {
-  std::cerr << "DENTRO DO IF" << std::endl;
     return;
   }
   size_t reqLen = strlen(reinterpret_cast<char *>(this->getCharRawData()));
   size_t headerSize = this->getHeaderRawDate().length() + 4;
-
-  size_t padding = reqLen - (headerSize + contentLength);
-  std::cerr << reqLen << std::endl;
-  std::cerr << "PADDING VALUE: " << padding << std::endl;
-
   if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
   }
