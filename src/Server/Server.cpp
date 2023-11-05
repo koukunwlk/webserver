@@ -3,7 +3,11 @@
 // Constructors
 Server::Server() {}
 
-Server::Server(std::vector<ServerConfig> config) { createThreadPool(config); }
+Server::Server(std::vector<ServerConfig> config) {
+  signalHandler();
+  createThreadPool(config);
+
+ }
 
 // Destructor
 Server::~Server() { closeServer(); }
@@ -20,13 +24,14 @@ int Server::createThreadPool(std::vector<ServerConfig> config) {
       std::cerr << "Error creating thread" << std::endl;
       return EXIT_FAILURE;
     }
+    this->_tArgs.threads.push_back(threads[i]);
     sleep(1);
   }
 
   return EXIT_SUCCESS;
 }
 
-void Server::closeServer() { close(this->_epollFd); }
+void Server::closeServer() { }
 
 int Server::putFdToListen(struct sockaddr_in listenAddress) {
   int fd;
@@ -56,14 +61,51 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
   return fd;
 }
 
+
+void Server::signalHandler() {
+  pthread_t thread;
+  sigemptyset(&this->set);
+  sigaddset(&this->set, SIGINT);
+  pthread_sigmask(SIG_BLOCK, &set, 0);
+
+  this->_tArgs.sigSet = set;
+  pthread_create(&thread, NULL, signalThread, static_cast<void *>(&
+  this->_tArgs));
+  this->_threads.push_back(thread);
+}
+
+void *Server::signalThread(void *args) {
+  ThreadArgs *tArgs = (ThreadArgs *)args;
+  int sig;
+  int err;
+  sigset_t sigs;
+  sigset_t oldSigSet;
+  sigfillset(&sigs);
+  pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
+
+  err = sigwait(&tArgs->sigSet, &sig);
+
+  if(err) {
+    std::cerr << "Error on sigwait" << std::endl;
+  } else {
+    std::cout << "Caught signal: " << sig << std::endl;
+    for (size_t i = 0; i < tArgs->fds.size(); i++) {
+      close(tArgs->fds[i]);
+    }
+    serverIsRunning = false;
+  }
+  return NULL;
+}
+
 void *Server::thread(void *args) {
+  ThreadArgs *tArgs = (ThreadArgs *)args;
   int epollFd;
   struct epoll_event *epEvent =
       (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
   if ((epollFd = epoll_create1(0)) == -1) {
     perror("Error creating epoll instance");
   }
-
+  tArgs->fds.push_back(epollFd);
   int port = ((ThreadArgs *)args)->currentServer.port;
 
   struct epoll_event ev;
@@ -76,13 +118,13 @@ void *Server::thread(void *args) {
 
   listenFd = putFdToListen(listenAddr);
   addListenFdToEpoll(listenFd, epollFd, epEvent);
-
+  tArgs->fds.push_back(listenFd);
   int clientFd;
   struct sockaddr_in clientAddr;
   socklen_t clientAddrLen = sizeof(clientAddr);
 
   int readyFds;
-  while (1) {
+  while (serverIsRunning) {
     readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
     if (readyFds <= 0) {
       std::cerr << "Error on epoll_wait" << std::endl;
@@ -99,6 +141,7 @@ void *Server::thread(void *args) {
             break;
           }
         }
+        tArgs->fds.push_back(epollFd);
 
         makeAFileDescriptorNonBlocking(clientFd);
         ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
@@ -142,6 +185,7 @@ void *Server::thread(void *args) {
   }
   free(epEvent);
   close(listenFd);
+  return NULL;
 }
 
 int Server::createEpollInstance() {
