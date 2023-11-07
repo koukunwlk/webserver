@@ -4,6 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
+Request::Request() {
+  
+}
+
 Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
   _header.contentLength = 0;
   setValidationStatus(0);
@@ -13,7 +17,7 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
 
 Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
     : _rawData(rawData) {
-    
+
   std::istringstream iss(getStringRawData());
   std::string requestMethod;
   std::string requestTarget;
@@ -91,7 +95,6 @@ bool Request::parseRequestData() {
 void Request::parseRawHeader() {
   std::string rawData = getStringRawData();
   std::size_t delim = rawData.find(CRLF);
-  std::cout << "delim: " << (delim == std::string::npos) << std::endl;
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
   }

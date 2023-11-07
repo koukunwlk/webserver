@@ -26,6 +26,7 @@ typedef struct ThreadArgs {
   struct epoll_event *_epEvent;
   ServerConfig currentServer;
   sigset_t sigSet;
+  Request *request;
 } ThreadArgs;
 
 class Server {

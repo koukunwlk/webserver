@@ -36,6 +36,7 @@ typedef struct RequestHeader {
 
 class Request {
  public:
+  Request();
   Request(std::vector<unsigned char>, ServerConfig);
   Request(std::vector<unsigned char>);
   ~Request();

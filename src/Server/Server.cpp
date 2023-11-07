@@ -6,8 +6,7 @@ Server::Server() {}
 Server::Server(std::vector<ServerConfig> config) {
   signalHandler();
   createThreadPool(config);
-
- }
+}
 
 // Destructor
 Server::~Server() { closeServer(); }
@@ -31,7 +30,7 @@ int Server::createThreadPool(std::vector<ServerConfig> config) {
   return EXIT_SUCCESS;
 }
 
-void Server::closeServer() { }
+void Server::closeServer() {}
 
 int Server::putFdToListen(struct sockaddr_in listenAddress) {
   int fd;
@@ -61,7 +60,6 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
   return fd;
 }
 
-
 void Server::signalHandler() {
   pthread_t thread;
   sigemptyset(&this->set);
@@ -69,8 +67,8 @@ void Server::signalHandler() {
   pthread_sigmask(SIG_BLOCK, &set, 0);
 
   this->_tArgs.sigSet = set;
-  pthread_create(&thread, NULL, signalThread, static_cast<void *>(&
-  this->_tArgs));
+  pthread_create(&thread, NULL, signalThread,
+                 static_cast<void *>(&this->_tArgs));
   this->_threads.push_back(thread);
 }
 
@@ -85,7 +83,7 @@ void *Server::signalThread(void *args) {
   pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
   err = sigwait(&tArgs->sigSet, &sig);
 
-  if(err) {
+  if (err) {
     perror("Error waiting for signal");
   } else {
     for (size_t i = 0; i < tArgs->fds.size(); i++) {
@@ -97,6 +95,7 @@ void *Server::signalThread(void *args) {
 }
 
 void *Server::thread(void *args) {
+  Request *request;
   ThreadArgs *tArgs = (ThreadArgs *)args;
   int epollFd;
   struct epoll_event *epEvent =
@@ -111,7 +110,6 @@ void *Server::thread(void *args) {
   tArgs->fds.push_back(epollFd);
 
   struct epoll_event ev;
-
   int listenFd;
   struct sockaddr_in listenAddr;
   listenAddr.sin_family = AF_INET;
@@ -143,48 +141,60 @@ void *Server::thread(void *args) {
             break;
           }
         }
-        tArgs->fds.push_back(epollFd);
+        tArgs->fds.push_back(clientFd);
 
         makeAFileDescriptorNonBlocking(clientFd);
         ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
         ev.data.fd = clientFd;
 
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
-          perror("epoll_ctl error ");
+          perror("ADD epoll_ctl error ");
         }
       } else {
-        int bytesReceived;
-        unsigned char buffer[1024];
-        std::vector<unsigned char> requestString;
-        while (1) {
-          bytesReceived = read(clientFd, buffer, sizeof(buffer));
-          if (bytesReceived < 0) {
-            if (bytesReceived == -1 && fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
+        if (epEvent[i].events & (EPOLLIN == EPOLLIN)) {
+          int bytesReceived;
+          unsigned char buffer[1024];
+          std::vector<unsigned char> requestString;
+          while (1) {
+            bytesReceived = read(clientFd, buffer, sizeof(buffer));
+            if (bytesReceived < 0) {
+              if (bytesReceived == -1 &&
+                  fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
+                break;
+              else
+                perror("read");
+            } else if (bytesReceived == 0)
               break;
-            else
-              perror("read");
-          } else if (bytesReceived == 0)
-            break;
-          requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
-          memset(buffer, 0, sizeof(buffer));
+            requestString.insert(requestString.end(), buffer,
+                                 buffer + bytesReceived);
+            memset(buffer, 0, sizeof(buffer));
+          }
 
+          request = new Request(requestString, currentServer);
+          ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
+          if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
+            perror("MOD epoll_ctl error ");
+          }
         }
 
-        Request request(requestString, currentServer);
-        if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
-          perror("epoll_ctl error ");
+        if (epEvent[i].events & (EPOLLOUT == EPOLLOUT)) {
+          Handler handle(*request);
+
+          Response response = handle.getResponse();
+          std::stringstream responseStr;
+          responseStr << response;
+
+          write(clientFd, responseStr.str().c_str(),
+                responseStr.str().length());
         }
 
-        Handler handle(request);
-
-        Response response = handle.getResponse();
-        std::stringstream responseStr;
-        responseStr << response;
-
-        write(clientFd, responseStr.str().c_str(), responseStr.str().length());
-        if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
-          perror("Error while delete clientFd from Epol");
-        close(clientFd);
+        else if (epEvent[i].events & (EPOLLHUP == EPOLLHUP)) {
+          epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+          close(ev.data.fd);
+          delete request;
+        }
+        // if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
+        //   perror("Error while delete clientFd from Epol");
       }
     }
   }
