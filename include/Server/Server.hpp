@@ -15,19 +15,15 @@
 
 #include "webserver.hpp"
 
-#define MAX_EVENTS 10
-
 extern bool serverIsRunning;
 
+
+
 typedef struct ThreadArgs {
-  std::vector<pthread_t> threads;
-  std::vector<int> fds;
-  int _epollFd;
-  struct epoll_event *_epEvent;
-  ServerConfig currentServer;
+  std::vector<int> _fds;
+  ServerConfig _srvConfig;
   sigset_t sigSet;
-  Request *request;
-} ThreadArgs;
+} threadArgs;
 
 class Server {
  public:
@@ -38,28 +34,18 @@ class Server {
   ~Server();
 
   // Methods
-  void fillThreadArgsStruct();
-  void fillAddrStruct();
-  int createEpollInstance();
-  int createThreadPool(std::vector<ServerConfig> config);
+  void startRoutine(std::vector<ServerConfig> config);
   static void *thread(void *args);
-  static void *thread1(void *args);
-  static int addListenFdToEpoll(int fd, int epollFd,
-                                struct epoll_event *epEvent);
-  void closeServer();
+  static void *signalThread(void *args);
+  void    signalHandler();
   static int makeAFileDescriptorNonBlocking(int fd);
   static int makeAPortOnFileDescriptorReusable(int fd);
-  static int putFdToListen(struct sockaddr_in listenAddress);
-  void signalHandler();
-  static void *signalThread(void *args);
 
 
  private:
   std::vector<pthread_t> _threads;
   std::vector<int> _fds;
-  ThreadArgs _tArgs;
-  int _epollFd;
-  struct epoll_event _epEvent;
+  ThreadArgs _threadArgs;
   sigset_t set;
 };
 

@@ -5,71 +5,95 @@ Server::Server() {}
 
 Server::Server(std::vector<ServerConfig> config) {
   signalHandler();
-  createThreadPool(config);
+  startRoutine(config);
 }
 
 // Destructor
-Server::~Server() { closeServer(); }
+Server::~Server() {}
 
 // Methods
-int Server::createThreadPool(std::vector<ServerConfig> config) {
-  int serverQuantity = config.size();
-  pthread_t threads[serverQuantity];
+void Server::startRoutine(std::vector<ServerConfig> config) {
+  pthread_t threadArray[config.size()];
+  for (size_t i = 0; i < config.size(); i++) {
+    this->_threadArgs._srvConfig = config[i];
+    pthread_create(&threadArray[i], NULL, thread, (void *)&_threadArgs);
+  }
+}
+void *Server::thread(void *args) {
+  ThreadArgs *_tArgs = (ThreadArgs *)malloc(sizeof((ThreadArgs *)args));
+  _tArgs = (ThreadArgs *)args;
 
-  for (int i = 0; i < serverQuantity; ++i) {
-    ServerConfig currentServer = config[i];
-    this->_tArgs.currentServer = currentServer;
-    if (pthread_create(&threads[i], NULL, thread, &this->_tArgs) == -1) {
-      std::cerr << "Error creating thread" << std::endl;
-      return EXIT_FAILURE;
+  std::cout << "#########################################" << std::endl;
+  std::cout << "#### Webserv is running on port " << _tArgs->_srvConfig.port
+            << " ####" << std::endl;
+  std::cout << "#########################################" << std::endl;
+
+  int listenSocket;
+  struct sockaddr_in listenSocketServerAddress;
+  listenSocketServerAddress.sin_family = AF_INET;
+  listenSocketServerAddress.sin_port = htons(_tArgs->_srvConfig.port);
+  listenSocketServerAddress.sin_addr.s_addr = inet_addr("0.0.0.0");
+
+  if ((listenSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    std::cerr << "Error creating socket" << std::endl;
+    return NULL;
+  }
+  makeAPortOnFileDescriptorReusable(listenSocket);
+  makeAFileDescriptorNonBlocking(listenSocket);
+  if (bind(listenSocket, (struct sockaddr *)&(listenSocketServerAddress),
+           sizeof(listenSocketServerAddress)) < 0) {
+    std::cerr << "Error binding socket" << std::endl;
+    return NULL;
+  }
+  if (listen(listenSocket, 64) < 0) {
+    std::cerr << "Error listening on socket" << std::endl;
+    return NULL;
+  }
+  
+  _tArgs->_fds.push_back(listenSocket);
+
+  int clientFd;
+  struct sockaddr_in clientAddress;
+  socklen_t clientAddressLength = sizeof(clientAddress);
+  while (serverIsRunning) {
+    std::cout << "Socket [" << listenSocket << "] Waiting for connections..."
+              << std::endl;
+
+    clientFd = accept(listenSocket, (struct sockaddr *)&clientAddress,
+                      &clientAddressLength);
+    if (clientFd < 0) {
+        std::cerr << "Error accepting connection" << std::endl;
+      break ;
     }
-    this->_tArgs.threads.push_back(threads[i]);
-    sleep(1);
+
+    int bytesReceived;
+    unsigned char buffer[1024];
+    std::vector<unsigned char> requestString;
+    while (1) {
+      bytesReceived = read(clientFd, buffer, sizeof(buffer));
+      if (bytesReceived < 0) {
+        if (bytesReceived == -1 &&
+            fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
+          break;
+        else
+          perror("read");
+      } else if (bytesReceived == 0)
+        break;
+      requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
+      memset(buffer, 0, sizeof(buffer));
+    }
+    Request request(requestString, _tArgs->_srvConfig);
+    Handler handler(request);
+
+    Response response = handler.getResponse();
+    std::stringstream responseString;
+    responseString << response;
+    write(clientFd, responseString.str().c_str(),
+          responseString.str().length());
+    close(clientFd);
   }
 
-  return EXIT_SUCCESS;
-}
-
-void Server::closeServer() {}
-
-int Server::putFdToListen(struct sockaddr_in listenAddress) {
-  int fd;
-
-  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("Error creating socket");
-    return -1;
-  }
-
-  makeAFileDescriptorNonBlocking(fd);
-  makeAPortOnFileDescriptorReusable(fd);
-
-  if (bind(fd, (struct sockaddr *)&listenAddress, sizeof(listenAddress)) ==
-      -1) {
-    perror("Error binding socket");
-    return -1;
-  }
-
-  if (listen(fd, 64) == -1) {
-    perror("Error putting socket to listen");
-    return -1;
-  }
-
-  std::cout << "Listening on port: " << ntohs(listenAddress.sin_port)
-            << std::endl;
-
-  return fd;
-}
-
-void Server::signalHandler() {
-  pthread_t thread;
-  sigemptyset(&this->set);
-  sigaddset(&this->set, SIGINT);
-  pthread_sigmask(SIG_BLOCK, &set, 0);
-
-  this->_tArgs.sigSet = set;
-  pthread_create(&thread, NULL, signalThread,
-                 static_cast<void *>(&this->_tArgs));
-  this->_threads.push_back(thread);
+  return NULL;
 }
 
 void *Server::signalThread(void *args) {
@@ -86,140 +110,25 @@ void *Server::signalThread(void *args) {
   if (err) {
     perror("Error waiting for signal");
   } else {
-    for (size_t i = 0; i < tArgs->fds.size(); i++) {
-      close(tArgs->fds[i]);
+    std::cout << "\nSignal received, closing the server. " << sig << std::endl;
+    for (size_t i = 0; i < tArgs->_fds.size(); i++) {
+      close(tArgs->_fds[i]);
     }
     serverIsRunning = false;
   }
   return NULL;
 }
 
-void *Server::thread(void *args) {
-  Request *request;
-  ThreadArgs *tArgs = (ThreadArgs *)args;
-  int epollFd;
-  struct epoll_event *epEvent =
-      (struct epoll_event *)malloc(sizeof(struct epoll_event) * MAX_EVENTS);
-  if ((epollFd = epoll_create1(0)) == -1) {
-    perror("Error creating epoll instance");
-  }
+void Server::signalHandler() {
+  pthread_t thread;
+  sigemptyset(&this->set);
+  sigaddset(&this->set, SIGINT);
+  pthread_sigmask(SIG_BLOCK, &set, 0);
 
-  ServerConfig currentServer = ((ThreadArgs *)args)->currentServer;
-
-  int port = currentServer.port;
-  tArgs->fds.push_back(epollFd);
-
-  struct epoll_event ev;
-  int listenFd;
-  struct sockaddr_in listenAddr;
-  listenAddr.sin_family = AF_INET;
-  listenAddr.sin_port = htons(port);
-  listenAddr.sin_addr.s_addr = inet_addr("0.0.0.0");
-
-  listenFd = putFdToListen(listenAddr);
-  addListenFdToEpoll(listenFd, epollFd, epEvent);
-  tArgs->fds.push_back(listenFd);
-  int clientFd;
-  struct sockaddr_in clientAddr;
-  socklen_t clientAddrLen = sizeof(clientAddr);
-
-  int readyFds;
-  while (serverIsRunning) {
-    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
-    if (readyFds <= 0) {
-      std::cerr << "Error on epoll_wait" << std::endl;
-    }
-    for (int i = 0; i < readyFds; i++) {
-      if (epEvent[i].data.fd == listenFd) {
-        clientFd =
-            accept(listenFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-        if (clientFd < 0) {
-          if (errno == EAGAIN || errno == EWOULDBLOCK)
-            break;
-          else {
-            perror("Accept error");
-            break;
-          }
-        }
-        tArgs->fds.push_back(clientFd);
-
-        makeAFileDescriptorNonBlocking(clientFd);
-        ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
-        ev.data.fd = clientFd;
-
-        if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
-          perror("ADD epoll_ctl error ");
-        }
-      } else {
-        if (epEvent[i].events & (EPOLLIN == EPOLLIN)) {
-          int bytesReceived;
-          unsigned char buffer[1024];
-          std::vector<unsigned char> requestString;
-          while (1) {
-            bytesReceived = read(clientFd, buffer, sizeof(buffer));
-            if (bytesReceived < 0) {
-              if (bytesReceived == -1 &&
-                  fcntl(clientFd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
-                break;
-              else
-                perror("read");
-            } else if (bytesReceived == 0)
-              break;
-            requestString.insert(requestString.end(), buffer,
-                                 buffer + bytesReceived);
-            memset(buffer, 0, sizeof(buffer));
-          }
-
-          request = new Request(requestString, currentServer);
-          ev.events = EPOLLOUT | EPOLLET | EPOLLONESHOT;
-          if (epoll_ctl(epollFd, EPOLL_CTL_MOD, clientFd, &ev) < 0) {
-            perror("MOD epoll_ctl error ");
-          }
-        }
-
-        if (epEvent[i].events & (EPOLLOUT == EPOLLOUT)) {
-          Handler handle(*request);
-
-          Response response = handle.getResponse();
-          std::stringstream responseStr;
-          responseStr << response;
-
-          write(clientFd, responseStr.str().c_str(),
-                responseStr.str().length());
-        }
-
-        else if (epEvent[i].events & (EPOLLHUP == EPOLLHUP)) {
-          epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-          close(ev.data.fd);
-          delete request;
-        }
-        // if (epoll_ctl(epollFd, EPOLL_CTL_DEL, clientFd, NULL) == -1)
-        //   perror("Error while delete clientFd from Epol");
-      }
-    }
-  }
-  free(epEvent);
-  return NULL;
-}
-
-int Server::createEpollInstance() {
-  if ((this->_epollFd = epoll_create1(0)) == -1) {
-    perror("Error creating epoll instance");
-    return EXIT_FAILURE;
-  }
-  return EXIT_SUCCESS;
-}
-
-int Server::addListenFdToEpoll(int fd, int epollFd,
-                               struct epoll_event *epEvent) {
-  epEvent->events = EPOLLIN | EPOLLET;
-  epEvent->data.fd = fd;
-
-  if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, epEvent) == -1) {
-    std::cerr << "Error adding socket to epoll" << std::endl;
-    return EXIT_FAILURE;
-  }
-  return EXIT_SUCCESS;
+  this->_threadArgs.sigSet = set;
+  pthread_create(&thread, NULL, signalThread,
+                 static_cast<void *>(&this->_threadArgs));
+  this->_threads.push_back(thread);
 }
 
 int Server::makeAPortOnFileDescriptorReusable(int fd) {
