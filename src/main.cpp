@@ -1,11 +1,11 @@
 #include "Server/Server.hpp"
-#include "webserver.hpp"
+#include "WebServer/WebServer.hpp"
 
 bool serverIsRunning = true;
 
 int main(int argc, char** argv) {
   signal(SIGINT, SIG_IGN);
-  if (argc < 2){
+  if (argc < 2) {
     std::cout << "Usage:\t./webserver <config_file.conf>\n";
     return EXIT_FAILURE;
   }
@@ -26,5 +26,4 @@ int main(int argc, char** argv) {
 
   while (serverIsRunning) {
   }
-
 }

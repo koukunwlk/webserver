@@ -12,10 +12,6 @@ OBJ_D		=	obj
 SRC_D		=	src
 INC_D		=	include
 
-RAW_H		=	webserver.hpp Server/Server.hpp Request/Request.hpp \
-				WebServerException/RequestValidationException.hpp \
-				WebServerException/WebServerException.hpp
-
 RAW_C		=	main.cpp \
 					WebServerException/WebServerException.cpp \
 					WebServerException/HostingException.cpp \
@@ -25,10 +21,10 @@ RAW_C		=	main.cpp \
 					Request/Request.cpp \
 					Response/Response.cpp \
 					ConfigFileParser/ConfigFileParser.cpp \
+					Webserver/WebServer.cpp \
 					Server/Server.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
-INCLUDE	=	$(addprefix $(INC_D)/,$(RAW_H))
 
 TEST_D		=	tests
 TEST_OBJ	=	$(addprefix $(TEST_D)/,$(TEST_C:.cpp=.o))
@@ -44,6 +40,7 @@ $(OBJ_D)/%.o : $(SRC_D)/%.cpp
 	@echo -n "Compiling $@... "
 	@mkdir -p $(OBJ_D)
 	@mkdir -p $(OBJ_D)/Server
+	@mkdir -p $(OBJ_D)/WebServer
 	@mkdir -p $(OBJ_D)/WebServerException
 	@mkdir -p $(OBJ_D)/Handler
 	@mkdir -p $(OBJ_D)/Request

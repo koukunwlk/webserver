@@ -13,5 +13,12 @@
 #include "Server/Server.hpp"
 
 
+class WebServer {
+  public:
+    WebServer();
+    ~WebServer();
+  private:
+}
+
 
 #endif /* ***************************************************** WEBSERV_H */

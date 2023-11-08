@@ -9,7 +9,7 @@
 
 #include "ConfigFileParser/ConfigFileParser.hpp"
 #include "WebServerException/WebServerException.hpp"
-#include "webserver.hpp"
+#include "WebServer/WebServer.hpp"
 
 #define CRLF "\r\n\r\n"
 #define VALID_REQUEST 0
