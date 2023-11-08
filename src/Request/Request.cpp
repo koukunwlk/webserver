@@ -13,12 +13,11 @@ Request::Request(std::vector<unsigned char> rawData) : _rawData(rawData) {
 
 Request::Request(std::vector<unsigned char> rawData, ServerConfig server)
     : _rawData(rawData) {
-    
   std::istringstream iss(getStringRawData());
   std::string requestMethod;
   std::string requestTarget;
   Location location;
-   _header.contentLength = 0;
+  _header.contentLength = 0;
 
   iss >> requestMethod;
   iss >> requestTarget;
@@ -91,7 +90,6 @@ bool Request::parseRequestData() {
 void Request::parseRawHeader() {
   std::string rawData = getStringRawData();
   std::size_t delim = rawData.find(CRLF);
-  std::cout << "delim: " << (delim == std::string::npos) << std::endl;
   if (delim == std::string::npos) {
     throw RequestValidationException::InvalidFormat();
   }
@@ -186,7 +184,8 @@ void Request::validateMethod() {
 }
 
 void Request::validateContentLength() {
-  if (_header.contentLength < 0 || _header.contentLength > this->getServerMaxBodySize()) {
+  if (_header.contentLength < 0 ||
+      _header.contentLength > this->getServerMaxBodySize()) {
     throw RequestValidationException();
   }
 }
@@ -202,7 +201,6 @@ void Request::validateBody() {
   if (reqLen != headerSize + contentLength) {
     throw RequestValidationException();
   }
-
 }
 
 /*
@@ -214,8 +212,8 @@ char* Request::getBody() const { return _body; }
 std::vector<unsigned char> Request::getRawData() { return _rawData; }
 
 std::string Request::getStringRawData() {
-  char *rawData =  reinterpret_cast<char*>(_rawData.data());
-  if(!rawData) return "";
+  char* rawData = reinterpret_cast<char*>(_rawData.data());
+  if (!rawData) return "";
   std::string str(rawData);
 
   return str;
