@@ -21,7 +21,7 @@ RAW_C		=	main.cpp \
 					Request/Request.cpp \
 					Response/Response.cpp \
 					ConfigFileParser/ConfigFileParser.cpp \
-					Webserver/WebServer.cpp \
+					WebServer/WebServer.cpp \
 					Server/Server.cpp
 
 OBJ			=	$(addprefix $(OBJ_D)/,$(RAW_C:.cpp=.o))
