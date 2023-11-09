@@ -22,6 +22,7 @@ class WebServer {
   WebServer();
   ~WebServer();
 
+  int cookSocket();
   void raise();
   void readFD(int fd);
   void writeFD(int fd, int i);

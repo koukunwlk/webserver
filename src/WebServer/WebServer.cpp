@@ -7,45 +7,48 @@ WebServer::WebServer() {
 
 WebServer::~WebServer() {}
 
-void WebServer::raise() {
-  // setup
+int WebServer::cookSocket() {
   int optval = 1;
-
-  int socketFd = socket(AF_INET, SOCK_STREAM, 0);
-
   _sockaddr.sin_family = AF_INET;
   _sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   _sockaddr.sin_port = htons(8000);
 
-  setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-
-  if (bind(socketFd, (const struct sockaddr*)&_sockaddr, sizeof(_sockaddr)))
+  int listenFd = socket(AF_INET, SOCK_STREAM, 0);
+  setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  if (bind(listenFd, (const struct sockaddr*)&_sockaddr, sizeof(_sockaddr)))
     perror("bind");
   std::cout << "Listening on port: " << ntohs(_sockaddr.sin_port) << std::endl;
 
-  if (listen(socketFd, 10)) perror("listen");
+  if (listen(listenFd, 10)) perror("listen");
 
-  if (fcntl(socketFd, F_SETFL, O_NONBLOCK)) perror("fcntl");
+  if (fcntl(listenFd, F_SETFL, O_NONBLOCK)) perror("fcntl");
 
-  FD_SET(socketFd, &_readFds);
-  _listenSockets.push_back(socketFd);
+  FD_SET(listenFd, &_readFds);
+  _listenSockets.push_back(listenFd);
+  return 0;
+}
+
+void WebServer::raise() {
+  // setup
+  cookSocket();
 
   // run
   struct timeval timer;
+  memset(&timer, 0, sizeof(timer));
 
   while (1) {
     timer.tv_sec = 1;
     timer.tv_usec = 0;
     fd_set readFds = _readFds;
     fd_set writeFds = _writeFds;
-
-    if (select(FD_SETSIZE, &readFds, &writeFds, NULL, &timer)) perror("select");
+    if (select(FD_SETSIZE , &readFds, &writeFds, NULL, &timer)) {
+      perror("select: ");
+    }
 
     // Handle
     for (std::vector<int>::iterator it = _listenSockets.begin();
          it != _listenSockets.end(); ++it) {
       int currentSockfd = *it;
-
       if (FD_ISSET(currentSockfd, &readFds)) {
         sockaddr_in client_addr;
         memset(&client_addr, 0, sizeof(client_addr));
@@ -60,9 +63,9 @@ void WebServer::raise() {
     }
 
     for (size_t i = 0; i < _clientSocks.size(); ++i) {
-      std::cout << "i: " << i << std::endl;
       int clientSocket = _clientSocks[i];
       if (FD_ISSET(clientSocket, &readFds)) {
+        if (fcntl(clientSocket, F_SETFL, O_NONBLOCK)) perror("fcntl");
         readFD(clientSocket);
         FD_CLR(clientSocket, &readFds);
         FD_SET(clientSocket, &writeFds);
@@ -76,26 +79,33 @@ void WebServer::raise() {
 
 void WebServer::readFD(int fd) {
   int bytesReceived;
-  unsigned char buffer[2];
+  unsigned char buffer[1024];
   std::vector<unsigned char> requestString;
   while (1) {
-    bytesReceived = recv(fd, buffer, sizeof(buffer), 0);
+    bytesReceived = read(fd, buffer, sizeof(buffer));
     if (bytesReceived < 0) {
-      perror("recv");
+      if (errno == EAGAIN || errno == EWOULDBLOCK)
+        break ;
+      else {
+        perror("read");
+        break ;
+      }
     } else if (bytesReceived == 0) {
-      std::cout << "asdasd\n";
       break;
     }
     requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
+    // std::cout << requestString.data() << std::endl;
     memset(buffer, 0, sizeof(buffer));
   }
   std::cout << "Request: " << std::endl;
   std::cout << requestString.data() << std::endl;
+
 }
 
 void WebServer::writeFD(int fd, int i) {
   std::string responseStr = "200 OK VLWS FLWS";
   send(fd, responseStr.c_str(), responseStr.length(), 0);
+  FD_CLR(fd, &_writeFds);
   close(fd);
   _clientSocks.erase(_clientSocks.begin() + i);
 }
