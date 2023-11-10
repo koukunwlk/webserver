@@ -35,13 +35,13 @@ void WebServer::raise() {
   // run
   struct timeval timer;
   memset(&timer, 0, sizeof(timer));
-
   while (1) {
     timer.tv_sec = 1;
     timer.tv_usec = 0;
     fd_set readFds = _readFds;
     fd_set writeFds = _writeFds;
-    if (select(FD_SETSIZE , &readFds, &writeFds, NULL, &timer)) {
+
+    if (select(FD_SETSIZE, &readFds, &writeFds, NULL, &timer) == -1) {
       perror("select: ");
     }
 
@@ -55,6 +55,7 @@ void WebServer::raise() {
         socklen_t addr_len = sizeof(client_addr);
         int clientSocket =
             accept(currentSockfd, (struct sockaddr*)&client_addr, &addr_len);
+        setNonBlocking(clientSocket);
         if (clientSocket != -1) {
           FD_SET(clientSocket, &readFds);
           _clientSocks.push_back(clientSocket);
@@ -64,8 +65,8 @@ void WebServer::raise() {
 
     for (size_t i = 0; i < _clientSocks.size(); ++i) {
       int clientSocket = _clientSocks[i];
+
       if (FD_ISSET(clientSocket, &readFds)) {
-        if (fcntl(clientSocket, F_SETFL, O_NONBLOCK)) perror("fcntl");
         readFD(clientSocket);
         FD_CLR(clientSocket, &readFds);
         FD_SET(clientSocket, &writeFds);
@@ -85,21 +86,17 @@ void WebServer::readFD(int fd) {
     bytesReceived = read(fd, buffer, sizeof(buffer));
     if (bytesReceived < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK)
-        break ;
+        break;
       else {
         perror("read");
-        break ;
+        break;
       }
     } else if (bytesReceived == 0) {
       break;
     }
     requestString.insert(requestString.end(), buffer, buffer + bytesReceived);
-    // std::cout << requestString.data() << std::endl;
     memset(buffer, 0, sizeof(buffer));
   }
-  std::cout << "Request: " << std::endl;
-  std::cout << requestString.data() << std::endl;
-
 }
 
 void WebServer::writeFD(int fd, int i) {
@@ -108,4 +105,20 @@ void WebServer::writeFD(int fd, int i) {
   FD_CLR(fd, &_writeFds);
   close(fd);
   _clientSocks.erase(_clientSocks.begin() + i);
+}
+
+void WebServer::setNonBlocking(int sock) {
+  int opts;
+
+  opts = fcntl(sock, F_GETFL);
+  if (opts < 0) {
+    perror("fcntl(F_GETFL)");
+    exit(EXIT_FAILURE);
+  }
+  opts = (opts | O_NONBLOCK);
+  if (fcntl(sock, F_SETFL, opts) < 0) {
+    perror("fcntl(F_SETFL)");
+    exit(EXIT_FAILURE);
+  }
+  return;
 }

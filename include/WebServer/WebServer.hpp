@@ -3,7 +3,6 @@
 
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <netinet/in.h>
 #include <signal.h>
 #include <sys/socket.h>
 
@@ -26,6 +25,7 @@ class WebServer {
   void raise();
   void readFD(int fd);
   void writeFD(int fd, int i);
+  void setNonBlocking(int sock);
 
  private:
   sockaddr_in _sockaddr;
