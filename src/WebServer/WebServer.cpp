@@ -8,71 +8,51 @@ WebServer::WebServer() {
 WebServer::~WebServer() {}
 
 int WebServer::cookSocket() {
-  int optval = 1;
   _sockaddr.sin_family = AF_INET;
   _sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   _sockaddr.sin_port = htons(8000);
 
-  int listenFd = socket(AF_INET, SOCK_STREAM, 0);
-  setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+  int listenFd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (bind(listenFd, (const struct sockaddr*)&_sockaddr, sizeof(_sockaddr)))
     perror("bind");
   std::cout << "Listening on port: " << ntohs(_sockaddr.sin_port) << std::endl;
 
-  if (listen(listenFd, 10)) perror("listen");
+  if (listen(listenFd, 64)) perror("listen");
 
-  if (fcntl(listenFd, F_SETFL, O_NONBLOCK)) perror("fcntl");
-
-  FD_SET(listenFd, &_readFds);
+  setNonBlocking(listenFd);
   _listenSockets.push_back(listenFd);
+
   return 0;
 }
 
 void WebServer::raise() {
   // setup
   cookSocket();
+  int eventCount;
+  struct epoll_event event, events[64];
+  int epollMonitor = epoll_create1(0);
 
-  // run
-  struct timeval timer;
-  memset(&timer, 0, sizeof(timer));
+  event.data.fd = _listenSockets[0];
+  event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+
+  epoll_ctl(epollMonitor, EPOLL_CTL_ADD, _listenSockets[0], &event);
+
   while (1) {
-    timer.tv_sec = 1;
-    timer.tv_usec = 0;
-    fd_set readFds = _readFds;
-    fd_set writeFds = _writeFds;
-
-    if (select(FD_SETSIZE, &readFds, &writeFds, NULL, &timer) == -1) {
-      perror("select: ");
-    }
-
-    // Handle
-    for (std::vector<int>::iterator it = _listenSockets.begin();
-         it != _listenSockets.end(); ++it) {
-      int currentSockfd = *it;
-      if (FD_ISSET(currentSockfd, &readFds)) {
-        sockaddr_in client_addr;
-        memset(&client_addr, 0, sizeof(client_addr));
-        socklen_t addr_len = sizeof(client_addr);
-        int clientSocket =
-            accept(currentSockfd, (struct sockaddr*)&client_addr, &addr_len);
-        setNonBlocking(clientSocket);
-        if (clientSocket != -1) {
-          FD_SET(clientSocket, &readFds);
-          _clientSocks.push_back(clientSocket);
-        }
+    eventCount = epoll_wait(epollMonitor, events, 64, 1000);
+    for (int i = 0; i < eventCount; ++i) {
+      if (events[i].data.fd == _listenSockets[0]) {
+        acceptConnection(epollMonitor, _listenSockets[0]);
+      } else if (events[i].events & EPOLLIN) {
+        readFD(events[i].data.fd);
+        writeFD(events[i].data.fd, epollMonitor);
+      } else {
+        std::cout << "Unknown event" << std::endl;
       }
-    }
-
-    for (size_t i = 0; i < _clientSocks.size(); ++i) {
-      int clientSocket = _clientSocks[i];
-
-      if (FD_ISSET(clientSocket, &readFds)) {
-        readFD(clientSocket);
-        FD_CLR(clientSocket, &readFds);
-        FD_SET(clientSocket, &writeFds);
-      }
-      if (FD_ISSET(clientSocket, &writeFds)) {
-        writeFD(clientSocket, i);
+      if (events[i].events & (EPOLLRDHUP | EPOLLHUP)) {
+        printf("[+] connection closed\n");
+        epoll_ctl(epollMonitor, EPOLL_CTL_DEL, events[i].data.fd, NULL);
+        close(events[i].data.fd);
+        continue;
       }
     }
   }
@@ -99,26 +79,37 @@ void WebServer::readFD(int fd) {
   }
 }
 
-void WebServer::writeFD(int fd, int i) {
+void WebServer::writeFD(int fd, int epollMonitor) {
   std::string responseStr = "200 OK VLWS FLWS";
-  send(fd, responseStr.c_str(), responseStr.length(), 0);
-  FD_CLR(fd, &_writeFds);
+  write(fd, responseStr.c_str(), responseStr.length());
+  epoll_event ev;
+  ev.events = EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP;
+  ev.data.fd = fd;
+  epoll_ctl(epollMonitor, EPOLL_CTL_DEL, fd, &ev);
   close(fd);
-  _clientSocks.erase(_clientSocks.begin() + i);
 }
 
 void WebServer::setNonBlocking(int sock) {
-  int opts;
+  int old_option = fcntl(sock, F_GETFL);
+  int new_option = old_option | O_NONBLOCK;
 
-  opts = fcntl(sock, F_GETFL);
-  if (opts < 0) {
-    perror("fcntl(F_GETFL)");
-    exit(EXIT_FAILURE);
+  fcntl(sock, F_SETFL, new_option);
+}
+
+void WebServer::acceptConnection(int epollFd, int listenFd) {
+  int clientFd;
+  struct sockaddr_in clientAddr;
+  socklen_t clientAddrSize = sizeof(clientAddr);
+  clientFd = accept(listenFd, (struct sockaddr*)&clientAddr, &clientAddrSize);
+  setNonBlocking(clientFd);
+  addFdToEpoll(clientFd, epollFd);
+}
+
+void addFdToEpoll(int fd, int epollFdm) {
+  struct epoll_event ev;
+  ev.events = EPOLLIN | EPOLLET;
+  ev.data.fd = fd;
+  if (epoll_ctl(epollFdm, EPOLL_CTL_ADD, fd, &ev) < 0) {
+    perror("epoll_ctl error ");
   }
-  opts = (opts | O_NONBLOCK);
-  if (fcntl(sock, F_SETFL, opts) < 0) {
-    perror("fcntl(F_SETFL)");
-    exit(EXIT_FAILURE);
-  }
-  return;
 }
