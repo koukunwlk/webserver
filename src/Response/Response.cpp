@@ -42,6 +42,7 @@ std::ostream &operator<<(std::ostream &os, const Response &res) {
      << res.getReasonPhrase() << "\r\n"
      << "Content-Type: " << res.getContentType() << "\r\n"
      << "Content-Length: " << res.getContentLength() << "\r\n"
+     << "Location: " << res.getLocation() << "\r\n"
      << "\r\n"
      << res.getBody();
   return os;
@@ -118,4 +119,8 @@ void Response::setLocation(std::string redirect) {
   _header.location = redirect;
   this->setStatusCode(301);
   this->setReasonPhrase("Moved Permanently");
+}
+
+std::string Response::getLocation() const {
+  return _header.location;
 }
