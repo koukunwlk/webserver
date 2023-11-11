@@ -6,6 +6,7 @@
 class WebServerException : public std::exception {
  public:
   WebServerException();
+  ~WebServerException();
   virtual const char *what() const throw();
 
  private:
