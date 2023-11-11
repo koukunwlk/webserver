@@ -54,9 +54,11 @@ void Parser::parseLine(string line) {
   } else if (line.compare("}") == 0) {
     if (static_cast<void*>(childBlock) != NULL) {
       block->addChildBlock(*childBlock);
+      delete childBlock;
       childBlock = NULL;
     } else {
       this->_blocks.push_back(*block);
+      delete block;
       block = NULL;
     }
   } else if (line.size() != 0) {
@@ -182,7 +184,7 @@ Location Parser::createLocation(Block location) {
       locationConfig.autoindex = currentProperty.second[0].compare("on") == 0;
     }
 
-    if(currentProperty.first.compare("upload_store") == 0) {
+    if (currentProperty.first.compare("upload_store") == 0) {
       std::string path = currentProperty.second[0];
       struct stat info;
 

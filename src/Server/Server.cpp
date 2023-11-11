@@ -3,20 +3,33 @@
 // Constructors
 Server::Server() {}
 
+pthread_t *Server::_threadEpoll = NULL;
+int Server::serverQuantity = 0;
+pthread_t *Server::_signalThread = NULL;
+
 Server::Server(std::vector<ServerConfig> config) {
+  serverIsRunning = true;
   signalHandler();
   createThreadPool(config);
 }
 
 // Destructor
-Server::~Server() {}
+Server::~Server() {
+  for (int i = 0; i < Server::serverQuantity; i++) {
+    pthread_join(Server::_threadEpoll[i], NULL);
+  }
+  pthread_join(*Server::_signalThread, NULL);
+  free(Server::_threadEpoll);
+  free(Server::_signalThread);
+}
 
 // Methods
 int Server::createThreadPool(std::vector<ServerConfig> config) {
   int serverQuantity = config.size();
-  pthread_t threads[serverQuantity];
+  pthread_t *threads = (pthread_t *)malloc(sizeof(pthread_t) * serverQuantity);
+  Server::serverQuantity = serverQuantity;
 
-  for (int i = 0; i < serverQuantity; ++i) {
+  for (int i = 0; i < serverQuantity; i++) {
     ServerConfig currentServer = config[i];
     this->_tArgs.currentServer = currentServer;
     if (pthread_create(&threads[i], NULL, thread, &this->_tArgs) == -1) {
@@ -25,7 +38,7 @@ int Server::createThreadPool(std::vector<ServerConfig> config) {
     }
     sleep(1);
   }
-
+  Server::_threadEpoll = threads;
   return EXIT_SUCCESS;
 }
 
@@ -58,14 +71,15 @@ int Server::putFdToListen(struct sockaddr_in listenAddress) {
 }
 
 void Server::signalHandler() {
-  pthread_t thread;
-  sigemptyset(&this->set);
-  sigaddset(&this->set, SIGINT);
-  pthread_sigmask(SIG_BLOCK, &set, 0);
-
-  this->_tArgs.sigSet = set;
-  pthread_create(&thread, NULL, signalThread,
-                 static_cast<void *>(&this->_tArgs));
+  sigset_t sigs;
+  sigemptyset(&sigs);
+  sigaddset(&sigs, SIGINT);
+  pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+  pthread_t *thread = (pthread_t *)malloc(sizeof(pthread_t));
+  if (pthread_create(thread, NULL, signalThread, &this->_tArgs) == -1) {
+    perror("PTHREAD_CREATE: ");
+  }
+  Server::_signalThread = thread;
 }
 
 void *Server::signalThread(void *args) {
@@ -75,25 +89,28 @@ void *Server::signalThread(void *args) {
   sigset_t sigs;
   sigset_t oldSigSet;
 
-  sigfillset(&sigs);
-  pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
-  err = sigwait(&tArgs->sigSet, &sig);
+  sigemptyset(&sigs);
+  sigaddset(&sigs, SIGINT);
 
+  pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
+  err = sigwait(&sigs, &sig);
+  std::cout << "Signal received: " << sig << std::endl;
   if (err) {
     perror("SIGWAIT: ");
   } else {
-    for (size_t i = 0; i < tArgs->fds.size(); i++) {
-      int value = close(tArgs->fds[i]);
-      if (value < 0) {
-        if (value == -1 && fcntl(tArgs->fds[i], F_GETFL, O_NONBLOCK)) {
-          i++;
-          continue;
-        } else
-          perror("CLOSE FD ON SIGNAL: ");
+    if (sig == SIGINT) {
+      for (size_t i = 0; i < tArgs->fds.size(); i++) {
+        int value = close(tArgs->fds[i]);
+        if (value < 0) {
+          if (value == -1 && fcntl(tArgs->fds[i], F_GETFL, O_NONBLOCK)) {
+            i++;
+            continue;
+          } else
+            perror("CLOSE FD ON SIGNAL: ");
+        }
       }
+      serverIsRunning = false;
     }
-    serverIsRunning = false;
-    free(tArgs->epEvent);
   }
   return NULL;
 }
@@ -130,10 +147,7 @@ void *Server::thread(void *args) {
 
   int readyFds;
   while (serverIsRunning) {
-    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
-    if (readyFds <= 0) {
-      std::cerr << "EPOLL_WAIT: " << std::endl;
-    }
+    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, 1000);
     for (int i = 0; i < readyFds; i++) {
       if (epEvent[i].data.fd == listenFd) {
         clientFd =

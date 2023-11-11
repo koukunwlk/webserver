@@ -47,6 +47,9 @@ class Server {
   static void *signalThread(void *args);
 
  private:
+  static pthread_t *_threadEpoll;
+  static pthread_t *_signalThread;
+  static int serverQuantity;
   ThreadArgs _tArgs;
   sigset_t set;
 };
