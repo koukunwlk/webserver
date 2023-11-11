@@ -5,7 +5,6 @@
 */
 
 Handler::Handler(Request &req) : _req(&req) {
-  _status = 0;
   if (_req->getValidationStatus() == VALID_REQUEST) {
     this->handleRequest();
   } else {
@@ -134,10 +133,19 @@ int Handler::handlePOST() {
 
 int Handler::handleDELETE() {
   std::string rootFolder = _req->getServerRoot();
-  std::string fileName = _req->getBody();
-  std::string fullPath = rootFolder + "/" + fileName;
+  std::string filePath = _req->getHeaderTarget();
+  std::string location = _req->getServerLocationUrl();
+
+  std::stringstream ss;
+  std::string fileParsed = filePath.substr(location.length());
+  if (fileParsed[0] != '/') {
+    fileParsed.insert(0, 1, '/');
+  }
+  std::string fullPath = rootFolder + fileParsed;
 
   if (access(fullPath.c_str(), F_OK)) {
+    _res.setStatusCode(404);
+    _res.setReasonPhrase("NOT FOUND");
     return 1;
   }
 
@@ -292,6 +300,9 @@ std::string getPhrase(int code) {
       break;
     case HTTP_FORBIDDEN:
       phrase = "Forbidden";
+      break;
+    case HTTP_NOT_ALLOWED:
+      phrase = "Method Not Allowed";
       break;
     case HTTP_NOT_FOUND:
     default:

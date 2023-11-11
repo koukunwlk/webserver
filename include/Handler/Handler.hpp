@@ -32,7 +32,6 @@ class Handler {
  private:
   Request *_req;
   Response _res;
-  int _status;
 };
 
 int getHtmlPage(std::string &page, std::string location, std::string root,
