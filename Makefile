@@ -1,5 +1,5 @@
 CC	=	c++
-CFLAGS = -Wall -Wextra -Werror -g -gdwarf-2 -pthread
+CFLAGS = -Wall -Wextra -Werror -g -gdwarf-2 -pthread -std=c++98
 TFLAGS = -l gtest
 
 NAME 		= webserver

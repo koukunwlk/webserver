@@ -4,7 +4,8 @@ WebServerException::WebServerException() {
   this->message = "A WebServer exception occured";
 }
 
-WebServerException::~WebServerException() {}
+WebServerException::~WebServerException() throw() {}
+
 const char *WebServerException::what() const throw() {
   return this->message.data();
 }

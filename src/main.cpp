@@ -13,15 +13,15 @@ int main(int argc, char** argv) {
 
   std::string content;
   std::ifstream configFile(argv[1]);
-  Parser* parser = new Parser;
+  Parser parser;
   while (std::getline(configFile, content, '\n')) {
     if (content.size() == 0 || content[0] == '#') continue;
-    parser->parseLine(content);
+    parser.parseLine(content);
   }
   configFile.close();
 
-  parser->populateServerConfigs();
-  std::vector<ServerConfig> configs = parser->getServerConfigs();
+  parser.populateServerConfigs();
+  std::vector<ServerConfig> configs = parser.getServerConfigs();
   Server server = Server(configs);
 
   while (serverIsRunning) {

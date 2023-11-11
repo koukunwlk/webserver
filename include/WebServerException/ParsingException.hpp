@@ -8,6 +8,7 @@ class ParsingException : public WebServerException {
  public:
   ParsingException();
   ParsingException(std::string message);
+  virtual ~ParsingException() throw();
 
   virtual const char *what() const throw();
 

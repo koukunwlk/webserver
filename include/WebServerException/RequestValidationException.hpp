@@ -14,6 +14,7 @@ class RequestValidationException : public WebServerException {
 
    public:
     InvalidMethod(const char *);
+    virtual ~InvalidMethod() throw();
     virtual const char *what() const throw();
   };
 
@@ -23,9 +24,11 @@ class RequestValidationException : public WebServerException {
 
    public:
     InvalidFormat();
+    virtual ~InvalidFormat() throw();
     virtual const char *what() const throw();
   };
   RequestValidationException();
+  virtual ~RequestValidationException() throw();
   virtual const char *what() const throw();
 
  private:

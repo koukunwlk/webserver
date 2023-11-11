@@ -12,9 +12,11 @@ class ConfigException : public WebServerException {
 
    public:
     FileNotFound(const char *);
+    virtual ~FileNotFound() throw();
     virtual const char *what() const throw();
   };
   ConfigException();
+  virtual ~ConfigException() throw();
   virtual const char *what() const throw();
 
  private:
