@@ -88,6 +88,8 @@ int Handler::handleGET() {
   } else if (endsWith(filePath, "/") ||
              filePath.find(".") == std::string::npos) {
     status += getFolder(*_req, page, location, rootFolder, filePath);
+  } else {
+    status = 1;
   }
 
   if (status == 0) {
@@ -101,24 +103,26 @@ int Handler::handleGET() {
 }
 
 int Handler::handlePOST() {
-    std::string contentType = _req->getHeaderContentType();
-    std::string requestRawData(_req->getStringRawData());
-    std::vector<unsigned char> rawData = _req->getRawData();
-    std::string uploadStore = _req->getUploadStore();
+  std::string contentType = _req->getHeaderContentType();
+  std::string requestRawData(_req->getStringRawData());
+  std::vector<unsigned char> rawData = _req->getRawData();
+  std::string uploadStore = _req->getUploadStore();
 
-    std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
-    size_t filenameInitPos = requestRawData.find("filename=") + 10;
-    size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
-    std::string filename = requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
-    size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
-    size_t closingBoundary = rawData.size() - boundary.length() - 7;
+  std::string boundary = contentType.substr(contentType.find("boundary=") + 9);
+  size_t filenameInitPos = requestRawData.find("filename=") + 10;
+  size_t filenameEndPos = requestRawData.find("\"", filenameInitPos);
+  std::string filename =
+      requestRawData.substr(filenameInitPos, filenameEndPos - filenameInitPos);
+  size_t nextCrlfPos = requestRawData.find(CRLF, filenameEndPos) + 4;
+  size_t closingBoundary = rawData.size() - boundary.length() - 7;
 
-    std::string filePath = uploadStore + "/" + filename;
-    
-    std::ofstream uploadedFile;
-    uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
+  std::string filePath = uploadStore + "/" + filename;
 
-    uploadedFile.write((char *)&rawData[nextCrlfPos], closingBoundary - nextCrlfPos);
+  std::ofstream uploadedFile;
+  uploadedFile.open(filePath.c_str(), std::ios::out | std::ios::binary);
+
+  uploadedFile.write((char *)&rawData[nextCrlfPos],
+                     closingBoundary - nextCrlfPos);
 
   uploadedFile.write((char *)&rawData[nextCrlfPos],
                      closingBoundary - nextCrlfPos);
