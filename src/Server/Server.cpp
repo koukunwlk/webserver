@@ -147,7 +147,7 @@ void *Server::thread(void *args) {
 
   int readyFds;
   while (serverIsRunning) {
-    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, 1000);
+    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
     for (int i = 0; i < readyFds; i++) {
       if (epEvent[i].data.fd == listenFd) {
         clientFd =
@@ -163,7 +163,7 @@ void *Server::thread(void *args) {
         }
         tArgs->fds.push_back(epollFd);
         makeAFileDescriptorNonBlocking(clientFd);
-        ev.events = EPOLLIN;
+        ev.events = EPOLLIN | EPOLLET;
         ev.data.fd = clientFd;
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
           perror("EPOL_CTL_ADD: ");
@@ -182,11 +182,11 @@ void *Server::thread(void *args) {
               perror("READ: ");
           } else if (bytesReceived == 0)
             break;
+          std::endl(std::cout);
           requestString.insert(requestString.end(), buffer,
                                buffer + bytesReceived);
           memset(buffer, 0, sizeof(buffer));
         }
-
         Request request(requestString, currentServer);
         Handler handle(request);
         Response response = handle.getResponse();
@@ -205,7 +205,7 @@ void *Server::thread(void *args) {
 
 int Server::addListenFdToEpoll(int fd, int epollFd,
                                struct epoll_event *epEvent) {
-  epEvent->events = EPOLLIN;
+  epEvent->events = EPOLLIN | EPOLLET;
   epEvent->data.fd = fd;
 
   if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, epEvent) == -1) {

@@ -123,9 +123,6 @@ int Handler::handlePOST() {
   uploadedFile.write((char *)&rawData[nextCrlfPos],
                      closingBoundary - nextCrlfPos);
 
-  uploadedFile.write((char *)&rawData[nextCrlfPos],
-                     closingBoundary - nextCrlfPos);
-
   _res.setStatusCode(201);
   _res.setReasonPhrase("CREATED");
   return 0;
