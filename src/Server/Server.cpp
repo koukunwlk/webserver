@@ -147,7 +147,7 @@ void *Server::thread(void *args) {
 
   int readyFds;
   while (serverIsRunning) {
-    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, -1);
+    readyFds = epoll_wait(epollFd, epEvent, MAX_EVENTS, 1000);
     for (int i = 0; i < readyFds; i++) {
       if (epEvent[i].data.fd == listenFd) {
         clientFd =
@@ -163,17 +163,17 @@ void *Server::thread(void *args) {
         }
         tArgs->fds.push_back(epollFd);
         makeAFileDescriptorNonBlocking(clientFd);
-        ev.events = EPOLLIN | EPOLLET;
+        ev.events = EPOLLIN;
         ev.data.fd = clientFd;
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &ev) < 0) {
           perror("EPOL_CTL_ADD: ");
         }
       } else {
         int bytesReceived;
-        unsigned char buffer[1024];
+        unsigned char buffer[2];
         std::vector<unsigned char> requestString;
         while (1) {
-          bytesReceived = read(epEvent[i].data.fd, buffer, sizeof(buffer));
+          bytesReceived = read(epEvent[i].data.fd, buffer, 1);
           if (bytesReceived < 0) {
             if (bytesReceived == -1 &&
                 fcntl(epEvent[i].data.fd, F_GETFL, O_NONBLOCK, FD_CLOEXEC))
@@ -182,7 +182,6 @@ void *Server::thread(void *args) {
               perror("READ: ");
           } else if (bytesReceived == 0)
             break;
-          std::endl(std::cout);
           requestString.insert(requestString.end(), buffer,
                                buffer + bytesReceived);
           memset(buffer, 0, sizeof(buffer));
@@ -205,7 +204,7 @@ void *Server::thread(void *args) {
 
 int Server::addListenFdToEpoll(int fd, int epollFd,
                                struct epoll_event *epEvent) {
-  epEvent->events = EPOLLIN | EPOLLET;
+  epEvent->events = EPOLLIN;
   epEvent->data.fd = fd;
 
   if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, epEvent) == -1) {
