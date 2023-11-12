@@ -94,7 +94,6 @@ void *Server::signalThread(void *args) {
 
   pthread_sigmask(SIG_BLOCK, &sigs, &oldSigSet);
   err = sigwait(&sigs, &sig);
-  std::cout << "Signal received: " << sig << std::endl;
   if (err) {
     perror("SIGWAIT: ");
   } else {
@@ -186,6 +185,7 @@ void *Server::thread(void *args) {
                                buffer + bytesReceived);
           memset(buffer, 0, sizeof(buffer));
         }
+        sleep(0.5);
         Request request(requestString, currentServer);
         Handler handle(request);
         Response response = handle.getResponse();
